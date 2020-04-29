@@ -59,8 +59,14 @@ async def 베리하드리스트(ctx):
     await ctx.send("```"+mapveryhard.replace(",","\n")+"```")
 
 @bot.command()
-async def 전체(ctx,amount):
-    await ctx.send("```"+random.sample(mapall.split(','),amount)+"```")
+async def 전체(ctx,amount=None):
+    if amount==None:
+        amount=10
+    data=random.sample(mapall.split(','),int(amount))
+    str1=""
+    for i in data:
+        str1=str1+i+"\n"
+    await ctx.send("```"+str1+"```")
 
 @bot.command()
 async def 전체리스트(ctx):
