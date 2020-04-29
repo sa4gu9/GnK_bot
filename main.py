@@ -138,7 +138,7 @@ async def 킹오hi(ctx): await ctx.send("킹오야 안녕")
 async def 욕해줘(ctx): await ctx.send("ㅅㅂ")
 
 @bot.command()
-async def 아잉련아(ctx): await ctx.send("?????")
+async def 아잉련아(ctx): await ctx.send("??????")
 
 @bot.command()
 async def 새벽(ctx): await ctx.send("에도 켜져있음")
