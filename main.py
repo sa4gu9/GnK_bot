@@ -21,35 +21,39 @@ mapall=[]
 for i in map1v1.split(',') : 
     mapall.append(i)
 
-temp=mapnormal.split(',')
+temp=0
 
-for i in temp : 
+for i in mapnormal.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+        if temp==len(mapall):
+            mapall.append(i)
+            temp=0
 
-temp=maphard.split(',')
-
-for i in temp : 
+for i in maphard.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+        if temp==len(mapall):
+            mapall.append(i)
+            temp=0
 
-temp=mapveryhard.split(',')
-
-for i in temp : 
+for i in mapveryhard.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+        if temp==len(mapall):
+            mapall.append(i)
+            temp=0
+
+print(mapall)
 
 
 command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,그리고 숨겨진 몇개의 명령어들"
@@ -135,7 +139,7 @@ async def 킹오hi(ctx): await ctx.send("킹오야 안녕")
 async def 욕해줘(ctx): await ctx.send("ㅅㅂ")
 
 @bot.command()
-async def 아잉련아(ctx): await ctx.send("??????")
+async def 아잉련아(ctx): await ctx.send("?????????")
 
 @bot.command()
 async def 새벽(ctx): await ctx.send("에도 켜져있음")
