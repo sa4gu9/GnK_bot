@@ -18,39 +18,42 @@ mapveryhard='노르테유 익스프레스,광산 3개의 지름길,광산 위험
 
 mapall=[]
 
+temp=0
 for i in map1v1.split(',') : 
     mapall.append(i)
 
-temp=mapnormal.split(',')
 
-for i in temp : 
+for i in mapnormal.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+    if len(mapall)==temp :
+        mapall.append(i)
+    temp=0
 
-temp=maphard.split(',')
-
-for i in temp : 
+for i in maphard.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+    if len(mapall)==temp :
+        mapall.append(i)
+    temp=0
 
-temp=mapveryhard.split(',')
-
-for i in temp : 
+for i in mapveryhard.split(',') : 
     for j in mapall :
         if i==j : 
-            continue
-        else :
-            mapall.append(i)
             break
+        else :
+            temp=temp+1
+    if len(mapall)==temp :
+        mapall.append(i)
+    temp=0
 
+print(mapall)
 
 command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,그리고 숨겨진 몇개의 명령어들"
 
