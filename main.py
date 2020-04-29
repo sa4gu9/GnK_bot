@@ -119,7 +119,7 @@ async def 전체리스트(ctx):
 
 @bot.command()
 async def 버전(ctx):
-    await ctx.send("V1.0.2")
+    await ctx.send("V1.0.2.1")
 
 @bot.command()
 async def 추천(ctx): await ctx.send("```"+random.choice(commandlist.split(','))+"```")    
