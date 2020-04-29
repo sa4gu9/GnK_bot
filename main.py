@@ -18,42 +18,39 @@ mapveryhard='노르테유 익스프레스,광산 3개의 지름길,광산 위험
 
 mapall=[]
 
-temp=0
 for i in map1v1.split(',') : 
     mapall.append(i)
 
+temp=mapnormal.split(',')
 
-for i in mapnormal.split(',') : 
+for i in temp : 
     for j in mapall :
         if i==j : 
-            break
+            continue
         else :
-            temp=temp+1
-    if len(mapall)==temp :
-        mapall.append(i)
-    temp=0
+            mapall.append(i)
+            break
 
-for i in maphard.split(',') : 
+temp=maphard.split(',')
+
+for i in temp : 
     for j in mapall :
         if i==j : 
-            break
+            continue
         else :
-            temp=temp+1
-    if len(mapall)==temp :
-        mapall.append(i)
-    temp=0
+            mapall.append(i)
+            break
 
-for i in mapveryhard.split(',') : 
+temp=mapveryhard.split(',')
+
+for i in temp : 
     for j in mapall :
         if i==j : 
-            break
+            continue
         else :
-            temp=temp+1
-    if len(mapall)==temp :
-        mapall.append(i)
-    temp=0
+            mapall.append(i)
+            break
 
-print(mapall)
 
 command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,그리고 숨겨진 몇개의 명령어들"
 
@@ -122,7 +119,7 @@ async def 전체리스트(ctx):
 
 @bot.command()
 async def 버전(ctx):
-    await ctx.send("V1.0.2")
+    await ctx.send("V1.0.2.1")
 
 @bot.command()
 async def 추천(ctx): await ctx.send("```"+random.choice(commandlist.split(','))+"```")    
