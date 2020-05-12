@@ -8,7 +8,7 @@ import random
 import math
 
 members=[]
-path='''C:\\Users\\user\\Desktop\\discord bot\\user info.txt'''
+path='''user info.txt'''
 if os.path.isfile(path):
     with open(path,"r") as tf:
         line=None
