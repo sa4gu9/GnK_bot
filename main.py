@@ -1,8 +1,29 @@
 # -*- coding: utf-8 -*- 
 
+import sys
+import os.path
 import discord
 from discord.ext import commands
 import random
+import math
+
+members=[]
+path='''C:\\Users\\user\\Desktop\\discord bot\\user info.txt'''
+if os.path.isfile(path):
+    with open(path,"r") as tf:
+        line=None
+        while line != '':
+            line=(tf.readline())
+            print(line.strip('\n'))
+            temp1=line.strip('\n').split(',')
+            for i in temp1 :
+                if len(i)==18 : 
+                    members.append(int(i))
+else : 
+    tf = open(path,"w")
+tf.close()
+
+print(members)
 
 bot = commands.Bot(command_prefix='GnK')
 token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
@@ -56,10 +77,9 @@ for i in mapveryhard.split(',') :
 print(mapall)
 
 
-command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,그리고 숨겨진 몇개의 명령어들"
+command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,가입,모아,베팅,그리고 숨겨진 몇개의 명령어들"
 
 commandlist="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,킹오hi,욕해줘,아잉련아,새벽,가입테스트"
-
 
 @bot.event
 async def on_ready():
@@ -123,7 +143,7 @@ async def 전체리스트(ctx):
 
 @bot.command()
 async def 버전(ctx):
-    await ctx.send("V1.0.2.1")
+    await ctx.send("V1.0.3")
 
 @bot.command()
 async def 추천(ctx): await ctx.send("```"+random.choice(commandlist.split(','))+"```")    
@@ -143,5 +163,101 @@ async def 아잉련아(ctx): await ctx.send("?????????")
 
 @bot.command()
 async def 새벽(ctx): await ctx.send("에도 켜져있음")
+
+@commands.cooldown(1, 20, commands.BucketType.user)
+@bot.command()
+async def 가입(ctx) : 
+    f = open(path,"a")
+    if not ctx.author.id in members :
+        f.write(str(len(members))+",")
+        f.write(str(ctx.author.id)+",")
+        f.write(str(5000).zfill(8)+","+"\n")
+        members.append(ctx.author.id)
+        await ctx.send("가입 성공!")
+    else :
+        await ctx.send("이미 가입이 되어 있습니다.")
+    f.close()
+
+@commands.cooldown(1, 20, commands.BucketType.user)
+@bot.command()
+async def 모아(ctx) : 
+    t1 = members.index(ctx.author.id)
+    print(t1)
+    f=open(path)
+    lines=f.readlines()
+    tps = lines[t1].split(',')
+    print(tps)
+    for i in tps : 
+        if len(str(i))==8 : 
+            await ctx.send(int(i))
+    print("모아 명령어 작동 완료")
+
+@commands.cooldown(1, 20, commands.BucketType.user)
+@bot.command()
+async def 베팅(ctx,moa=None,mode=None) : 
+    end=0
+    whole=""
+    lose=0
+    chance=0
+    profit=0
+    money=0
+    multiple=0
+    t1 = members.index(ctx.author.id)
+    with open(path) as f:
+        whole=f.read()
+        f.seek(0)
+        lines=f.readlines()
+        tps = lines[t1].split(',')
+        for i in tps : 
+            if len(str(i))==8 : 
+                money=int(i)
+                f.close()
+    if money<int(moa) : 
+        await ctx.send("보유량보다 많이 베팅할수 없습니다.")
+        return
+    if moa==None : 
+        await ctx.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배)")
+        return
+    else :
+        lose=int(moa)
+        print("lose : "+str(lose))
+        if int(mode)==1 : 
+            chance=80
+            multiple=1.4
+        if int(mode)==2 : 
+            chance=64
+            multiple=1.8
+        if int(mode)==3 : 
+            chance=48
+            multiple=2.2
+        if int(mode)==4 : 
+            chance=32
+            multiple=2.6
+        if int(mode)==5 : 
+            chance=16
+            multiple=3       
+    if int(mode)<6 and int(mode)>0 : 
+        result=random.randrange(0,100)
+        print(str(result)+" "+str(chance))
+        if result<chance : 
+            profit=math.floor(multiple*int(moa))
+            print(profit)
+            print(lose)
+            print(money)
+            end=money-lose+profit
+            whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+            await ctx.send("축하합니다!"+str(moa)+"모아에서 "+str(profit)+"모아가 되었습니다!")
+        else :
+            end=money-lose
+            whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+            await ctx.send("아쉽습니다. "+str(moa)+"모아를 잃으셨습니다.")
+        files=open(path,"w")
+        print(whole)
+        files.write(whole)
+        files.close()                             
+    else : 
+        await ctx.send("모드를 선택해주세요. 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배")
+    print("베팅 명령어 작동 완료")
+    
 
 bot.run(token)
