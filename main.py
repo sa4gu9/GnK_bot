@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.1"
+version="V1.1.0.2"
 
 print(members)
 
@@ -218,7 +218,8 @@ async def 가입(ctx,nickname=None) :
             f.write(str(len(members))+",")
             f.write(str(nickname)+",")
             f.write(str(ctx.author.id)+",")
-            f.write(str(5000).zfill(8)+","+"\n")
+            f.write(str(5000).zfill(8)+",")
+            f.write(str(0).zfill(3)+"\n")
             f.close()
             members.append(ctx.author.id)
             await ctx.author.send("가입 성공!")
