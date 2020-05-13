@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0"
+version="V1.1.0.1"
 
 print(members)
 
@@ -290,8 +290,8 @@ async def 베팅(ctx,moa=None,mode=None) :
                     f.close()
                 elif len(i)>3 and len(i)<8 : 
                     nick=i
-        if money<int(moa) : 
-            await ctx.author.send(nick+"님 보유량보다 많이 베팅할수 없습니다.")
+        if money<int(moa) or int(moa)<0 : 
+            await ctx.author.send(nick+"님 보유량보다 많거나 0원 미만으로 베팅하실 수 없습니다.")
             return
         elif moa==None : 
             await ctx.author.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배)")
