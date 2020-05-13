@@ -4,11 +4,16 @@ import sys
 import os.path
 import discord
 from discord.ext import commands
+from discord.utils import get
 import random
 import math
+import time
+import asyncio
+import string
 
 members=[]
 path='''user info.txt'''
+path2='betting stat.txt'
 if os.path.isfile(path):
     with open(path,"r") as tf:
         line=None
@@ -22,6 +27,14 @@ if os.path.isfile(path):
 else : 
     tf = open(path,"w")
 tf.close()
+
+if not os.path.isfile(path2):
+    tf = open(path2,"w")
+    tf.write("0,0")
+    tf.close()
+
+
+version="V1.1.0"
 
 print(members)
 
@@ -77,9 +90,41 @@ for i in mapveryhard.split(',') :
 print(mapall)
 
 
-command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,가입,모아,베팅,그리고 숨겨진 몇개의 명령어들"
+command="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,가입테스트,가입,모아,베팅,기부,상점,구걸,그리고 숨겨진 몇개의 명령어들"
 
-commandlist="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,킹오hi,욕해줘,아잉련아,새벽,가입테스트"
+commandlist="도와줘,안녕,에결,에결리스트,노멀,노멀리스트,하드,하드리스트,베리하드,베리하드리스트,전체,전체리스트,버전,추천,킹오hi,욕해줘,아잉련아,새벽,가입테스트,베팅,가입,모아,기부,상점,구걸"
+
+@bot.event
+async def on_message(ctx) :
+    role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
+    money=0
+    nick=""
+    end=0
+    if role in ctx.author.roles :
+        whole=""
+        if len(members)!=0 : 
+            t1 = members.index(ctx.author.id)
+            with open(path) as f:
+                whole=f.read()
+                f.seek(0)
+                lines=f.readlines()
+                print(t1)
+                print(lines)
+                tps = lines[t1].split(',')
+                f.close()
+                for i in tps : 
+                    if len(str(i))==8 : 
+                        money=int(i)
+                    elif len(i)>3 and len(i)<8 : 
+                        nick=i
+            end=money-4000
+            whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+            f=open(path,"w")
+            f.write(whole)
+            f.close()
+            await ctx.delete()
+        await ctx.author.send(f'{nick}님, mute 상태에서 채팅을 쳐서 {money}모아에서 {end}모아가 되었습니다.')
+    await bot.process_commands(ctx)
 
 @bot.event
 async def on_ready():
@@ -143,7 +188,7 @@ async def 전체리스트(ctx):
 
 @bot.command()
 async def 버전(ctx):
-    await ctx.send("V1.0.3")
+    await ctx.send(version)
 
 @bot.command()
 async def 추천(ctx): await ctx.send("```"+random.choice(commandlist.split(','))+"```")    
@@ -166,98 +211,294 @@ async def 새벽(ctx): await ctx.send("에도 켜져있음")
 
 @commands.cooldown(1, 20, commands.BucketType.user)
 @bot.command()
-async def 가입(ctx) : 
-    f = open(path,"a")
-    if not ctx.author.id in members :
-        f.write(str(len(members))+",")
-        f.write(str(ctx.author.id)+",")
-        f.write(str(5000).zfill(8)+","+"\n")
-        members.append(ctx.author.id)
-        await ctx.send("가입 성공!")
-    else :
-        await ctx.send("이미 가입이 되어 있습니다.")
-    f.close()
+async def 가입(ctx,nickname=None) : 
+    if len(nickname)>3 and len(nickname)<8 : 
+        f = open(path,"a")
+        if not ctx.author.id in members :
+            f.write(str(len(members))+",")
+            f.write(str(nickname)+",")
+            f.write(str(ctx.author.id)+",")
+            f.write(str(5000).zfill(8)+","+"\n")
+            f.close()
+            members.append(ctx.author.id)
+            await ctx.author.send("가입 성공!")
+        else :
+            await ctx.author.send("이미 가입이 되어 있습니다.")
+    else : 
+        await ctx.author.send("닉네임 제한 4~7, 한글3 영어1")
 
-@commands.cooldown(1, 20, commands.BucketType.user)
+@commands.cooldown(1, 5, commands.BucketType.default)
 @bot.command()
-async def 모아(ctx) : 
-    t1 = members.index(ctx.author.id)
-    print(t1)
-    f=open(path)
-    lines=f.readlines()
-    tps = lines[t1].split(',')
-    print(tps)
-    for i in tps : 
-        if len(str(i))==8 : 
-            await ctx.send(int(i))
-    print("모아 명령어 작동 완료")
-
-@commands.cooldown(1, 20, commands.BucketType.user)
-@bot.command()
-async def 베팅(ctx,moa=None,mode=None) : 
-    end=0
-    whole=""
-    lose=0
-    chance=0
-    profit=0
+async def 모아(ctx,nickname=None) : 
+    nick=""
     money=0
-    multiple=0
-    t1 = members.index(ctx.author.id)
-    with open(path) as f:
-        whole=f.read()
-        f.seek(0)
+    user=""
+    if nickname==None : 
+        t1 = members.index(ctx.author.id)
+        print(t1)
+        f=open(path)
         lines=f.readlines()
         tps = lines[t1].split(',')
+        print(tps)
         for i in tps : 
-            if len(str(i))==8 : 
+            if len(i)>3 and len(i)<8 : 
+                nick=i
+            elif len(str(i))==8 : 
                 money=int(i)
-                f.close()
-    if money<int(moa) : 
-        await ctx.send("보유량보다 많이 베팅할수 없습니다.")
-        return
-    if moa==None : 
-        await ctx.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배)")
-        return
-    else :
-        lose=int(moa)
-        print("lose : "+str(lose))
-        if int(mode)==1 : 
-            chance=80
-            multiple=1.4
-        if int(mode)==2 : 
-            chance=64
-            multiple=1.8
-        if int(mode)==3 : 
-            chance=48
-            multiple=2.2
-        if int(mode)==4 : 
-            chance=32
-            multiple=2.6
-        if int(mode)==5 : 
-            chance=16
-            multiple=3       
-    if int(mode)<6 and int(mode)>0 : 
-        result=random.randrange(0,100)
-        print(str(result)+" "+str(chance))
-        if result<chance : 
-            profit=math.floor(multiple*int(moa))
-            print(profit)
-            print(lose)
-            print(money)
-            end=money-lose+profit
-            whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
-            await ctx.send("축하합니다!"+str(moa)+"모아에서 "+str(profit)+"모아가 되었습니다!")
-        else :
-            end=money-lose
-            whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
-            await ctx.send("아쉽습니다. "+str(moa)+"모아를 잃으셨습니다.")
-        files=open(path,"w")
-        print(whole)
-        files.write(whole)
-        files.close()                             
+        await ctx.author.send(f'{nick} 님의 모아는 {money}모아 입니다.')
     else : 
-        await ctx.send("모드를 선택해주세요. 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배")
+        with open(path) as f:
+            whole=f.read()
+            f.seek(0)
+            lines=f.readlines()
+        for i in lines : 
+            if i.find(nickname)>0 : 
+                words = i.split(',')
+                for j in words : 
+                    if len(j)==8 : 
+                        money=int(j)
+        await ctx.send(f'{nickname} 님의 모아는 {money}모아 입니다.')
+    print("모아 명령어 작동 완료")
+
+@commands.cooldown(1, 5, commands.BucketType.default)
+@bot.command()
+async def 베팅(ctx,moa=None,mode=None) :
+    stat=open(path2,"r")
+    stats=stat.read()
+    stat.close()
+    stats=stats.split(',')
+    stats[0]=int(stats[0])+1
+    stats[1]=int(stats[1])+int(moa)
+    role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
+    if not role in ctx.author.roles :
+        end=0
+        whole=""
+        lose=0
+        chance=0
+        profit=0
+        money=0
+        multiple=0
+        t1 = members.index(ctx.author.id)
+        with open(path) as f:
+            whole=f.read()
+            f.seek(0)
+            lines=f.readlines()
+            tps = lines[t1].split(',')
+            for i in tps : 
+                if len(str(i))==8 : 
+                    money=int(i)
+                    f.close()
+                elif len(i)>3 and len(i)<8 : 
+                    nick=i
+        if money<int(moa) : 
+            await ctx.author.send(nick+"님 보유량보다 많이 베팅할수 없습니다.")
+            return
+        elif moa==None : 
+            await ctx.author.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배)")
+            return
+        else :
+            lose=int(moa)
+            print("lose : "+str(lose))
+            if int(mode)==1 : 
+                chance=80
+                multiple=1.4
+            if int(mode)==2 : 
+                chance=64
+                multiple=1.8
+            if int(mode)==3 : 
+                chance=48
+                multiple=2.2
+            if int(mode)==4 : 
+                chance=32
+                multiple=2.6
+            if int(mode)==5 : 
+                chance=16
+                multiple=3       
+        if int(mode)<6 and int(mode)>0 : 
+            result=random.randrange(0,100)
+            print(str(result)+" "+str(chance))
+            if result<chance : 
+                profit=math.floor(multiple*int(moa))
+                print(profit)
+                print(lose)
+                print(money)
+                end=money-lose+profit
+                whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+                await ctx.author.send("축하합니다!"+nick+"님! "+str(moa)+"모아에서 "+str(profit)+"모아가 되었습니다!")
+            else :
+                end=money-lose
+                whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+                await ctx.author.send("아쉽습니다. "+nick+"님... "+str(moa)+"모아를 잃으셨습니다.")
+            files=open(path,"w")
+            print(whole)
+            files.write(whole)
+            files.close()
+            if stats[0]==1000 : 
+                stat=open(path2,"w")
+                stat.write("0,0")
+                stat.close()
+                luckym=(math.floor(int(stats[1])*0.1))
+                print(luckym)
+                getuser=random.randrange(0,len(members))
+                print(lines)
+                linesplit = lines[getuser].split(',')
+                money2=0
+                print(linesplit)
+                end2=0
+                nickname2=""
+                discorduser=""
+                for i in linesplit : 
+                    if len(i)==8 : 
+                        money2=int(i)
+                    elif len(i)==18 : 
+                        discorduser=bot.get_user(int(i))
+                    elif len(i)>3 and len(i)<8 : 
+                        nickname2=i      
+                end2=money2+luckym
+                whole=whole.replace((i+","+str(money2).zfill(8)),(i+","+str(end2).zfill(8)))
+                await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+                await discorduser.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            else : 
+                stat=open(path2,"w")
+                stat.write(str(stats[0])+','+str(stats[1]))
+                stat.close()
+        else : 
+            await ctx.author.send("모드를 선택해주세요. 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배")
+            return
+    else : 
+        ctx.author.send("구걸 상태라 베팅을 할 수 없습니다.")
+        return
     print("베팅 명령어 작동 완료")
+
+@bot.command()
+async def 구걸(ctx) : 
+    role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
+    if not role in ctx.author.roles :
+        hour=7
+        minute=0
+        second=0
+        money=0
+        nick=""
+        end=0
+        t1 = members.index(ctx.author.id)
+        with open(path) as f:
+            whole=f.read()
+            f.seek(0)
+            lines=f.readlines()
+            tps = lines[t1].split(',')
+            f.close()
+            for i in tps : 
+                if len(str(i))==8 : 
+                    money=int(i)
+                elif len(i)>3 and len(i)<8 : 
+                    nick=i
+        member = ctx.message.author
+        await member.add_roles(get(ctx.guild.roles,name="Muted"))
+        await ctx.send(f'{nick}님이 구걸 하기 위해 {hour}시간 {minute}분 {second}초 뮤트 되어 30000모아를 지급하였습니다. 뮤트상태에서 채팅을 치면 4000모아를 뺏깁니다.')
+        end=money+30000
+        whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
+        f = open(path,"w")
+        f.write(whole)
+        f.close()
+        await asyncio.sleep(hour*60*60+minute*60+second)
+        await member.remove_roles(get(ctx.guild.roles,name="Muted"))
+    else : 
+        await ctx.author.send("이미 구걸 중입니다.")
     
+@commands.cooldown(1, 5, commands.BucketType.default)
+@bot.command()
+async def 기부(ctx,nickname2=None,moa=None) : 
+    role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles) 
+    if not role in ctx.author.roles :
+        end1=0
+        end2=0
+        whole=""
+        money1=0
+        money2=0
+        nickname1=""
+        user=0
+        t1 = members.index(ctx.author.id)
+        with open(path) as f:
+            whole=f.read()
+            f.seek(0)
+            lines=f.readlines()
+            tps = lines[t1].split(',')
+            for i in tps : 
+                if len(str(i))==8 : 
+                    money1=int(i)
+                    f.close()
+                elif len(i)>3 and len(i)<8 : 
+                    nickname1=i
+            for i in lines : 
+                if i.find(nickname2)>0 : 
+                    words = i.split(',')
+                    for j in words : 
+                        if len(j)==8 : 
+                            money2=int(j)
+                        elif len(j)==18 : 
+                            user=bot.get_user(int(j))
+        if money1<int(moa) : 
+            await ctx.author.send(nickname1+"님 보유량보다 많이 기부할수 없습니다.")
+            return
+        elif moa==None : 
+            await ctx.author.send("기부할 돈을 입력해주세요.")
+            return
+        else : 
+            end1=money1-int(moa)
+            ttemp=math.floor(int(moa)*0.9)
+            end2=money2+ttemp
+            whole=whole.replace((str(ctx.author.id)+","+str(money2).zfill(8)),(str(ctx.author.id)+","+str(end2).zfill(8)))
+            whole=whole.replace((nickname2+","+str(ctx.author.id)+","+str(money2).zfill(8)),(nickname2+","+(str(ctx.author.id)+","+str(end2).zfill(8))))
+            print(user)
+            print(ctx.author)
+            await user.send(f'{nickname1}님이 {moa}모아를 기부하셔서 수수료 10%를 뺀 {money2}모아에서 {end2}모아가 되었습니다!')
+            await ctx.author.send(f"{nickname1}님, {nickname2}님에게 {moa}모아를 기부해서 {money1}모아에서 {end1}모아가 되었습니다!")
+            files=open(path,"w")
+            files.write(whole)
+            files.close()                             
+    else : 
+        ctx.author.send("구걸 상태라 기부 할 수 없습니다.")
+    print("기부 명령어 작동 완료")
+
+@bot.command()
+async def 상점(ctx,item=None) : 
+    num=0
+    num2=0
+    end=0
+    money=0
+    if item==None : 
+        await ctx.send("번호\t\t\t상품 이름\t\t\t가격\n1.\t\t\t내전 참가권\t\t\t30000모아")
+    elif int(item)==1 : 
+        file = open(path,"r")
+        whole = file.read()
+        file.seek(0)
+        list1 = file.readlines()
+        string1 = ""
+        nickname=""
+        for i in list1 : 
+            if i.find(str(ctx.author.id)) : 
+                string1 = i
+                break
+        for i in string1.split(',') : 
+            if len(i)==3 : 
+                num=int(i)
+            elif len(i)==8 : 
+                money=int(i)
+            elif len(i)>3 and len(i)<8 : 
+                nickname=i
+        num2=num+1
+        if money>=30000 : 
+            end=money-30000
+            print(str(ctx.author.id)+","+str(money).zfill(8)+","+str(num).zfill(3))
+            print(str(ctx.author.id)+","+str(end).zfill(8)+","+str(num2).zfill(3))
+            whole=whole.replace(str(ctx.author.id)+","+str(money).zfill(8)+","+str(num).zfill(3),str(ctx.author.id)+","+str(end).zfill(8)+","+str(num2).zfill(3))
+            await ctx.author.send("내전 참가권을 구입하는데 성공했습니다!")
+            await ctx.send(f"{nickname}님이 내전 참가권을 구입하였습니다!")
+            file=open(path,"w")
+            file.write(whole)
+            file.close()
+        else : 
+            await ctx.author.send(f"모아가 부족합니다!")
+        
 
 bot.run(token)
