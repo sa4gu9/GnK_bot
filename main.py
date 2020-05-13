@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.2"
+version="V1.1.0.3"
 
 print(members)
 
@@ -419,6 +419,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         nickname1=""
         user=0
         t1 = members.index(ctx.author.id)
+        id=0
         with open(path) as f:
             whole=f.read()
             f.seek(0)
@@ -437,19 +438,23 @@ async def 기부(ctx,nickname2=None,moa=None) :
                         if len(j)==8 : 
                             money2=int(j)
                         elif len(j)==18 : 
+                            ids=j
                             user=bot.get_user(int(j))
-        if money1<int(moa) : 
-            await ctx.author.send(nickname1+"님 보유량보다 많이 기부할수 없습니다.")
+        if money1<int(moa) or int(moa)<0  : 
+            await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
             return
         elif moa==None : 
             await ctx.author.send("기부할 돈을 입력해주세요.")
             return
         else : 
+            with open(path) as f:
+                whole=f.read()
+                f.close()
             end1=money1-int(moa)
             ttemp=math.floor(int(moa)*0.9)
             end2=money2+ttemp
-            whole=whole.replace((str(ctx.author.id)+","+str(money2).zfill(8)),(str(ctx.author.id)+","+str(end2).zfill(8)))
-            whole=whole.replace((nickname2+","+str(ctx.author.id)+","+str(money2).zfill(8)),(nickname2+","+(str(ctx.author.id)+","+str(end2).zfill(8))))
+            whole=whole.replace((str(ctx.author.id)+","+str(money1).zfill(8)),(str(ctx.author.id)+","+str(end1).zfill(8)))
+            whole=whole.replace(nickname2+","+str(ids)+","+str(money2).zfill(8),nickname2+","+str(ids)+","+str(end2).zfill(8))
             print(user)
             print(ctx.author)
             await user.send(f'{nickname1}님이 {moa}모아를 기부하셔서 수수료 10%를 뺀 {money2}모아에서 {end2}모아가 되었습니다!')
