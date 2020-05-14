@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.4"
+version="V1.1.0.5"
 
 print(members)
 
@@ -209,7 +209,7 @@ async def 아잉련아(ctx): await ctx.send("?????????")
 @bot.command()
 async def 새벽(ctx): await ctx.send("에도 켜져있음")
 
-@commands.cooldown(1, 20, commands.BucketType.user)
+@commands.cooldown(1, 5, commands.BucketType.default)
 @bot.command()
 async def 가입(ctx,nickname=None) : 
     if len(nickname)>3 and len(nickname)<8 : 
@@ -219,7 +219,7 @@ async def 가입(ctx,nickname=None) :
             f.write(str(nickname)+",")
             f.write(str(ctx.author.id)+",")
             f.write(str(5000).zfill(8)+",")
-            f.write(str(0).zfill(3)+"\n")
+            f.write(str(0).zfill(3)+",\n")
             f.close()
             members.append(ctx.author.id)
             await ctx.author.send("가입 성공!")
@@ -228,7 +228,7 @@ async def 가입(ctx,nickname=None) :
     else : 
         await ctx.author.send("닉네임 제한 4~7, 한글3 영어1")
 
-@commands.cooldown(1, 5, commands.BucketType.default)
+@commands.cooldown(1, 1, commands.BucketType.default)
 @bot.command()
 async def 모아(ctx,nickname=None) : 
     nick=""
@@ -261,7 +261,7 @@ async def 모아(ctx,nickname=None) :
         await ctx.send(f'{nickname} 님의 모아는 {money}모아 입니다.')
     print("모아 명령어 작동 완료")
 
-@commands.cooldown(1, 5, commands.BucketType.default)
+@commands.cooldown(1, 1, commands.BucketType.default)
 @bot.command()
 async def 베팅(ctx,moa=None,mode=None) :
     stat=open(path2,"r")
