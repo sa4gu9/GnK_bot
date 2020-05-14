@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.3"
+version="V1.1.0.4"
 
 print(members)
 
@@ -360,6 +360,7 @@ async def 베팅(ctx,moa=None,mode=None) :
                 await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                 await discorduser.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             else : 
+                await ctx.send(str(stats[0])+"번째 베팅")
                 stat=open(path2,"w")
                 stat.write(str(stats[0])+','+str(stats[1]))
                 stat.close()
