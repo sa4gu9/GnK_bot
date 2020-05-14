@@ -39,7 +39,8 @@ version="V1.1.0.5"
 print(members)
 
 bot = commands.Bot(command_prefix='GnK')
-token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
+#token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
+token = "NzAzNTAyMDMxNzUwNjkyODc2.XqeWuA.6uXrvrmoR8ggWnQLbEta8eFaXR0"
 
 map1v1 = '비치 해변 드라이브,쥐라기 공룡 무덤,브로디 비밀의 연구소,네모 산타의 비밀공간,빌리지 고가의 질주,월드 리오 다운힐,도검 구름의 협곡,신화 신들의 세계,WKC 코리아 서킷,차이나 서안 병마용'#10
 
