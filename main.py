@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.6"
+version="V1.1.0.7"
 
 print(members)
 
@@ -337,13 +337,15 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     print(whole)
                     files.write(whole)
                     files.close()
-                    if stats[0]==500 : 
+                    if stats[0]==5 : 
+                        userids=0
                         stat=open(path2,"w")
                         stat.write("0,0")
                         stat.close()
                         luckym=(math.floor(int(stats[1])*0.1))
                         print(luckym)
                         getuser=random.randrange(0,len(members))
+                        print(getuser)
                         print(lines)
                         linesplit = lines[getuser].split(',')
                         money2=0
@@ -355,11 +357,14 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                             if len(i)==8 : 
                                 money2=int(i)
                             elif len(i)==18 : 
+                                userids=i
                                 discorduser=bot.get_user(int(i))
                             elif len(i)>3 and len(i)<8 : 
                                 nickname2=i      
                         end2=money2+luckym
-                        whole=whole.replace((i+","+str(money2).zfill(8)),(i+","+str(end2).zfill(8)))
+                        whole=whole.replace((str(userids)+","+str(money2).zfill(8)),(str(userids)+","+str(end2).zfill(8)))
+                        print(end2)
+                        print()
                         await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                         await discorduser.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                     else : 
