@@ -260,7 +260,7 @@ async def 모아(ctx,nickname=None) :
         await ctx.send(f'{nickname} 님의 모아는 {money}모아 입니다.')
     print("모아 명령어 작동 완료")
 
-@commands.cooldown(1, 3, commands.BucketType.user)
+@commands.cooldown(1, 2, commands.BucketType.default)
 @bot.command()
 async def 베팅(ctx,moa=None,mode=None,repeat=None) :
     if repeat==None : 
