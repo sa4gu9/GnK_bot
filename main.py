@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.7"
+version="V1.1.0.8"
 
 print(members)
 
@@ -337,7 +337,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     print(whole)
                     files.write(whole)
                     files.close()
-                    if stats[0]==5 : 
+                    if stats[0]==500 : 
                         userids=0
                         stat=open(path2,"w")
                         stat.write("0,0")
@@ -363,8 +363,9 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                                 nickname2=i      
                         end2=money2+luckym
                         whole=whole.replace((str(userids)+","+str(money2).zfill(8)),(str(userids)+","+str(end2).zfill(8)))
-                        print(end2)
-                        print()
+                        editfile=open(path,"w")
+                        editfile.write(whole)
+                        editfile.close()
                         await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                         await discorduser.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                     else : 
@@ -519,5 +520,13 @@ async def 상점(ctx,item=None) :
         else : 
             await ctx.author.send(f"모아가 부족합니다!")
         
+@commands.cooldown(1, 2, commands.BucketType.default)
+@bot.command()
+async def 럭키팡(ctx) : 
+    stat=open(path2,"r")
+    whole=stat.read()
+    stats=whole.split(',')
+    await ctx.send("누적 횟수 : "+stats[0]+", 누적 모아 : "+stats[1])
+
 
 bot.run(token)
