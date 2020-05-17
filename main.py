@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.0.8"
+version="V1.1.1"
 
 print(members)
 
@@ -271,8 +271,6 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
             stats=stat.read()
             stat.close()
             stats=stats.split(',')
-            stats[0]=int(stats[0])+1
-            stats[1]=int(stats[1])+int(moa)
             role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
             if not role in ctx.author.roles :
                 end=0
@@ -333,6 +331,14 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         end=money-lose
                         whole=whole.replace((str(ctx.author.id)+","+str(money).zfill(8)),(str(ctx.author.id)+","+str(end).zfill(8)))
                         await ctx.author.send("아쉽습니다. "+nick+"님... "+str(moa)+"모아를 잃으셨습니다.")
+                        stats[0]=int(stats[0])+1
+                        await ctx.send(str(stats[0])+"번째 실패")
+                        if money>=1000000 :
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.7)
+                        elif money>=500000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.5)
+                        else : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.3)
                     files=open(path,"w")
                     print(whole)
                     files.write(whole)
@@ -369,7 +375,6 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                         await discorduser.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                     else : 
-                        await ctx.send(str(stats[0])+"번째 베팅")
                         stat=open(path2,"w")
                         stat.write(str(stats[0])+','+str(stats[1]))
                         stat.close()
@@ -431,7 +436,6 @@ async def 기부(ctx,nickname2=None,moa=None) :
         nickname1=""
         user=0
         t1 = members.index(ctx.author.id)
-        id=0
         with open(path) as f:
             whole=f.read()
             f.seek(0)
@@ -495,10 +499,14 @@ async def 상점(ctx,item=None) :
         list1 = file.readlines()
         string1 = ""
         nickname=""
+        print(list1)
         for i in list1 : 
-            if i.find(str(ctx.author.id)) : 
+            print(i)
+            print(ctx.author.id)
+            if str(ctx.author.id) in i : 
                 string1 = i
                 break
+        print(string1.split(','))
         for i in string1.split(',') : 
             if len(i)==3 : 
                 num=int(i)
