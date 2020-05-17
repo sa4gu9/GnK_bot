@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.1"
+version="V1.1.1.1"
 
 print(members)
 
@@ -130,7 +130,6 @@ async def on_message(ctx) :
 async def on_ready():
     print("bot login test")
     print(bot.user.name)
-
     print(bot.user.id)
     print("-----------")
     await bot.change_presence(status=discord.Status.online,activity=discord.Game('도움말 : GnK도와줘'))
@@ -333,17 +332,25 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         await ctx.author.send("아쉽습니다. "+nick+"님... "+str(moa)+"모아를 잃으셨습니다.")
                         stats[0]=int(stats[0])+1
                         await ctx.send(str(stats[0])+"번째 실패")
-                        if money>=1000000 :
+                        if money>=5000000 :
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.7)
-                        elif money>=500000 : 
+                        elif money>=4000000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.6)
+                        elif money>=3000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.5)
-                        else : 
+                        elif money>=2000000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.4)
+                        elif money>=1000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.3)
+                        elif money>=500000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.2)
+                        else : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.1)
                     files=open(path,"w")
                     print(whole)
                     files.write(whole)
                     files.close()
-                    if stats[0]==500 : 
+                    if stats[0]>=100 : 
                         userids=0
                         stat=open(path2,"w")
                         stat.write("0,0")
@@ -456,7 +463,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
                         elif len(j)==18 : 
                             ids=j
                             user=bot.get_user(int(j))
-        if money1<int(moa) or int(moa)<0  : 
+        if money1<int(moa) or int(moa)<0 : 
             await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
             return
         elif nickname1==str(nickname2) : 
