@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.1.1"
+version="V1.1.2"
 
 print(members)
 
@@ -350,7 +350,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     print(whole)
                     files.write(whole)
                     files.close()
-                    if stats[0]>=100 : 
+                    if int(stats[0])>=100 : 
                         userids=0
                         stat=open(path2,"w")
                         stat.write("0,0")
@@ -543,5 +543,28 @@ async def 럭키팡(ctx) :
     stats=whole.split(',')
     await ctx.send("누적 횟수 : "+stats[0]+", 누적 모아 : "+stats[1])
 
+@bot.command()
+async def 에결추천(ctx) : 
+    await ctx.send("준비중입니다")
+
+@bot.command()
+async def 문의(ctx):
+    count=1
+    guild = ctx.guild
+    for member in guild.members : 
+        for role in member.roles : 
+            if "문의" in role.name : 
+                count=count+1
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        ctx.author: discord.PermissionOverwrite(read_messages=True,send_messages=True),
+    }
+    await guild.create_role(name="문의 "+str(count))
+    role = discord.utils.get(ctx.guild.roles, name="문의 "+str(count))
+    cate = discord.utils.get(guild.categories,name="문의")
+    server = ctx.guild
+    user = ctx.message.author
+    await user.add_roles(role)
+    channel = await guild.create_text_channel("문의 "+str(count), overwrites=overwrites,category=cate)
 
 bot.run(token)
