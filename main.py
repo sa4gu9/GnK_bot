@@ -34,7 +34,7 @@ if not os.path.isfile(path2):
     tf.close()
 
 
-version="V1.1.2"
+version="V1.1.2.1"
 
 print(members)
 
@@ -332,32 +332,38 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         await ctx.author.send("아쉽습니다. "+nick+"님... "+str(moa)+"모아를 잃으셨습니다.")
                         stats[0]=int(stats[0])+1
                         await ctx.send(str(stats[0])+"번째 실패")
-                        if money>=5000000 :
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.7)
-                        elif money>=4000000 : 
+                        if money>=10000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.6)
-                        elif money>=3000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.5)
-                        elif money>=2000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.4)
-                        elif money>=1000000 : 
+                        elif money>=5000000 :
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.35)
+                        elif money>=4000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.3)
-                        elif money>=500000 : 
+                        elif money>=3000000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.25)
+                        elif money>=2000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.2)
-                        else : 
+                        elif money>=1000000 : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.15)
+                        elif money>=500000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.1)
+                        else : 
+                            stats[1]=int(stats[1])+math.floor(int(moa)*0.05)
                     files=open(path,"w")
                     print(whole)
                     files.write(whole)
                     files.close()
                     if int(stats[0])>=100 : 
+                        getusers=[]
                         userids=0
                         stat=open(path2,"w")
                         stat.write("0,0")
                         stat.close()
                         luckym=(math.floor(int(stats[1])*0.1))
                         print(luckym)
-                        getuser=random.randrange(0,len(members))
+                        for i in range(10) :
+                            getusers.append(random.randrange(0,len(members)))
+                        await ctx.send(getusers)
+                        getuser=random.choice(getusers)
                         print(getuser)
                         print(lines)
                         linesplit = lines[getuser].split(',')
@@ -566,5 +572,8 @@ async def 문의(ctx):
     user = ctx.message.author
     await user.add_roles(role)
     channel = await guild.create_text_channel("문의 "+str(count), overwrites=overwrites,category=cate)
+    owner = bot.get_user(382938103435886592)
+    await owner.send("문의가 들어왔습니다!")
+    await ctx.author.send("문의-"+str(count)+" 게시판이 만들어졌습니다! 이 게시판에서 문의를 해주세요!")
 
 bot.run(token)
