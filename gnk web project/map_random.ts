@@ -12,6 +12,7 @@ function map_random(mode,amount){
     var mapresult=[];
     var result=0;
 
+
     switch(mode){
         case 1 :
             if(amount>map1v1.split(',').length){
@@ -40,41 +41,18 @@ function map_random(mode,amount){
                 mapall.push(map1v1.split(',')[i]);
             }
             for (var i=0; i<mapnormal.split(',').length; i++){
-                for(var j=0; j<mapall.length; j++){
-                    if(mapnormal.split(',')[i]==mapall[j])
-                        break;
-                    else
-                        temp++;
-                    if (temp==mapall.length){
-                        mapall.push(mapnormal.split(',')[i])
-                        temp=0;
-                    }
-                }
+                if(mapall.indexOf(mapnormal.split(',')[i])==-1)
+                    mapall.push(mapnormal.split(',')[i]);
             }
 
             for (var i=0; i<maphard.split(',').length; i++){
-                for(var j=0; j<maphard.length; j++){
-                    if(maphard.split(',')[i]==mapall[j])
-                        break;
-                    else
-                        temp++;
-                    if (temp==mapall.length){
-                        mapall.push(maphard.split(',')[i])
-                        temp=0;
-                    }
-                }
+                if(mapall.indexOf(maphard.split(',')[i])==-1)
+                    mapall.push(maphard.split(',')[i]);
             }
 
             for (var i=0; i<mapveryhard.split(',').length; i++){
-                for(var j=0; j<mapveryhard.length; j++){
-                    if(mapveryhard.split(',')[i]==mapall[j])
-                        break;
-                    else
-                        temp++;
-                    if (temp==mapall.length){
-                        mapall.push(mapveryhard.split(',')[i])
-                        temp=0;
-                    }
+                if(mapall.indexOf(mapveryhard.split(',')[i])==-1)
+                    mapall.push(mapveryhard.split(',')[i]);
                 }
             }
             if(amount>mapall.length){
@@ -83,48 +61,54 @@ function map_random(mode,amount){
     }
 
     for(var i=0; i<amount; i++){
-        var temp=0;
         switch(mode){
             case 1:
+                console.log(map1v1)
                 result = Math.floor(map1v1.split(',').length*Math.random());
-                for(var j=0; j<mapresult.length; j++)
-                    if(map1v1.split(',')[result]==mapresult[j])
-                        break;
-                    else
-                        temp++;
-                    if (temp==mapresult.length){
-                        mapresult.push(map1v1.split(',')[result]);
-                        temp=0;
-                    }
-                    else {
-                        i--;
-                    }
+                if(mapresult.indexOf(map1v1.split(',')[result])==-1)
+                    mapresult.push(map1v1.split(',')[result])
+                else
+                    i--;
                 break;
             case 2:
                 result = Math.floor(mapnormal.split(',').length*Math.random());
-                mapresult.push(mapnormal.split(',')[result]);
+                if(mapresult.indexOf(mapnormal.split(',')[result])==-1)
+                    mapresult.push(mapnormal.split(',')[result])
+                else
+                    i--;
                 break;
             case 3:
                 result = Math.floor(maphard.split(',').length*Math.random());
-                mapresult.push(maphard.split(',')[result]);
+                if(mapresult.indexOf(maphard.split(',')[result])==-1)
+                    mapresult.push(maphard.split(',')[result])
+                else
+                    i--;
                 break;
             case 4:
                 result = Math.floor(mapveryhard.split(',').length*Math.random());
-                mapresult.push(mapveryhard.split(',')[result]);
+                if(mapresult.indexOf(mapveryhard.split(',')[result])==-1)
+                    mapresult.push(mapveryhard.split(',')[result])
+                else
+                    i--;
                 break;
             case 5:           
                 console.log(mapall)
                 result = Math.floor((Math.random()*mapall.length));
-                mapresult.push(mapall[result]);
+                if(mapresult.indexOf(mapall[result])==-1)
+                    mapresult.push(mapall[result])
+                else
+                    i--;
                 break;
             default : 
                 alert("잘못 입력함");
                 break;
         }
     }
+    document.getElementById("result").innerHTML="";
+    for(var i=0; i<mapresult.length; i++)
+        document.getElementById("result").innerHTML+=((i+1)+". "+mapresult[i]+"<br>");
     console.log(mapresult);
     alert(mapresult);
 
     
-    }
 }
