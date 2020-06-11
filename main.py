@@ -13,7 +13,7 @@ import string
 import pymysql
 import hashlib
 
-version="V1.1.3"
+version="V1.1.3.1"
 
 members=[]
 
@@ -327,7 +327,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.05)
                         sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
                         cur.execute(sql)
-                    if int(stats[0])>=3 : 
+                    if int(stats[0])>=100 : 
                         stats[0]=0
                         sql=f"update betstat set betcount='0',pangprice='0'"
                         cur.execute(sql)
@@ -429,7 +429,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         print(user)
         nickname2=datas[1]
         sql2=f"update user_info set moa=moa-{moa} where discorduserid={t1}"
-        sql3=f"update user_info set moa=moa+truncate(moa*0.9,0) where binary nickname='{str(nickname2)}'"
+        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where binary nickname='{str(nickname2)}'"
         print(sql3)
         if money1<int(moa) or int(moa)<0 : 
             await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
