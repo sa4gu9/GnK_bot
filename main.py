@@ -13,7 +13,7 @@ import string
 import pymysql
 import hashlib
 
-version="V1.1.3.1"
+version="V1.1.4"
 
 members=[]
 
@@ -187,9 +187,13 @@ async def 가입(ctx,nickname=None) :
             print(num_user)
             cur.execute(sql3)
             datas=cur.fetchall()
+            nicks=str(nickname).lower()
             for data in datas : 
                 print(data)
-                nicknames.append(data[0])
+                temp=str(data[0]).lower()
+                nicknames.append(temp)
+                print(nicknames)
+                print(nickname)
             if not nickname in nicknames : 
                 salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
                 hasing=hashlib.sha512()
@@ -229,7 +233,7 @@ async def 모아(ctx,nickname=None) :
             money=i[1]
         await ctx.author.send(f'{nick}님의 모아는 {money}모아 입니다.')
     else : 
-        sql=f"select moa from user_info where binary nickname='{nickname}'"
+        sql=f"select moa from user_info where nickname='{nickname}'"
         print(sql)
         cur.execute(sql)
         data = cur.fetchall()
@@ -416,7 +420,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         user=0
         t1 = ctx.author.id
         sql=f"select moa,nickname from user_info where discorduserid={t1}"
-        sql4=f"select discorduserid,nickname from user_info where binary nickname='{str(nickname2)}'"
+        sql4=f"select discorduserid,nickname from user_info where nickname='{str(nickname2)}'"
         cur.execute(sql)
         datas=cur.fetchone()
         print(datas)
@@ -429,7 +433,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         print(user)
         nickname2=datas[1]
         sql2=f"update user_info set moa=moa-{moa} where discorduserid={t1}"
-        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where binary nickname='{str(nickname2)}'"
+        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where nickname='{str(nickname2)}'"
         print(sql3)
         if money1<int(moa) or int(moa)<0 : 
             await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
@@ -568,6 +572,27 @@ async def 재발급(ctx) :
     con.close()
     print(result1)
     await ctx.author.send(f"재발급 된 로그인 문자열은 {result1}입니다.")
+
+@bot.command()
+async def 점수(ctx,nick=None) : 
+    score=0
+    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+    cur=con.cursor()
+    if nick==None : 
+        sql=f"select score from user_info where discorduserid={ctx.author.id}"
+        cur.execute(sql)
+        datas=cur.fetchall()
+        for i in datas : 
+            score=i[0]
+        await ctx.author.send(f"당신의 GnK내전 점수는 {score}점 입니다.")
+    else : 
+        sql=f"select score from user_info where nickname='{nick}'"
+        cur.execute(sql)
+        datas=cur.fetchall()
+        for i in datas : 
+            score=i[0]
+            await ctx.send(f"{nick}의 GnK내전 점수는 {score}점 입니다.")
+    con.close()
 
 
 bot.run(token)
