@@ -12,8 +12,11 @@ import asyncio
 import string
 import pymysql
 import hashlib
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+import re
 
-version="V1.1.4"
+version="V1.2"
 
 members=[]
 
@@ -69,6 +72,7 @@ print(mapall)
 @bot.event
 async def on_message(ctx) :
     role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
+    tester = discord.utils.find(lambda r: r.name == '테스터',ctx.guild.roles)
     if role in ctx.author.roles :
         t1=ctx.author.id
         con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
@@ -79,7 +83,11 @@ async def on_message(ctx) :
         con.commit()
         await ctx.delete()
         await ctx.author.send(f'mute 상태에서 채팅을 쳐서 4000모아를 잃었습니다.')
-    await bot.process_commands(ctx)
+        print(ctx.author.roles)
+    if not tester in ctx.author.roles : 
+        await bot.process_commands(ctx)
+    else : 
+        print("123456") 
 
 @bot.event
 async def on_ready():
@@ -147,7 +155,7 @@ async def 버전(ctx):
 @bot.command()
 async def 가입테스트(ctx): await ctx.send("https://cdn.discordapp.com/attachments/702739996947251234/703170259322011679/unknown.png"+"\n필수 : 연구소, 로비, 협곡, 산타 중 2개 선택\n선택 : 나머지 맵들 중 2개 선택\n\n기회 맵당 3번")
 
-#숨겨진 몇몇 명령어들
+
 @bot.command()
 async def 킹오hi(ctx): await ctx.send("킹오야 안녕")
 
@@ -214,6 +222,7 @@ async def 가입(ctx,nickname=None) :
     else : 
         await ctx.author.send("닉네임 제한 4~10, 한글3 영어1")
 
+
 @commands.cooldown(1, 1, commands.BucketType.default)
 @bot.command()
 async def 모아(ctx,nickname=None) : 
@@ -244,6 +253,8 @@ async def 모아(ctx,nickname=None) :
     con.close()
     print("모아 명령어 작동 완료")
 
+
+
 @commands.cooldown(1, 10, commands.BucketType.default)
 @commands.cooldown(1, 30, commands.BucketType.user)
 @bot.command()
@@ -251,6 +262,8 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
     if repeat==None : 
         repeat=1
     if int(repeat)<=10 and int(repeat)>0 : 
+        total_profit=0
+        start=0
         stats=[]
         for num in range(int(repeat)) : 
             con = pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
@@ -277,6 +290,8 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                 for i in datas : 
                     nick=i[0]
                     money=i[1]
+                    if num==0 : 
+                        start=i[1]
                 if money<int(moa) or int(moa)<0 : 
                     await ctx.author.send(nick+"님 보유량보다 많거나 0원 미만으로 베팅하실 수 없습니다.")
                     return
@@ -305,12 +320,13 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     if result<chance : 
                         profit=math.floor(multiple*int(moa))
                         end=money-lose+profit
-                        sql=f"update user_info set moa='{end}' where discorduserid='{t1}'"
+                        total_profit=total_profit-lose+profit
+                        sql=f"update user_info set moa={end} where discorduserid='{t1}'"
                         cur.execute(sql)
-                        await ctx.author.send("축하합니다!"+nick+"님! "+str(moa)+"모아에서 "+str(profit)+"모아가 되었습니다!")
+                        
                     else :
+                        total_profit=total_profit-lose
                         end=money-lose
-                        await ctx.author.send("아쉽습니다. "+nick+"님... "+str(moa)+"모아를 잃으셨습니다.")
                         stats[0]=int(stats[0])+1
                         await ctx.send(str(stats[0])+"번째 실패")
                         if money>=10000000 : 
@@ -329,14 +345,16 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.1)
                         else : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.05)
+                        sql2=f"update user_info set moa={end} where discorduserid='{t1}'"
                         sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
                         cur.execute(sql)
+                        cur.execute(sql2)
                     if int(stats[0])>=100 : 
                         stats[0]=0
                         sql=f"update betstat set betcount='0',pangprice='0'"
                         cur.execute(sql)
                         getusers=[]
-                        luckym=(math.floor(int(stats[1])*0.1))
+                        luckym=(int(stats[1]))
                         for i in range(30) :
                             getusers.append(random.randrange(0,len(members)))
                         await ctx.send(getusers)
@@ -371,7 +389,12 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
     else : 
         await ctx.author.send("1~10회만 반복 가능합니다.")
     con.close()
+    if total_profit>=0 :
+        await ctx.author.send(f"{nick}님 {str(start)}모아에서 {str(start+total_profit)}모아가 되었습니다. {total_profit}모아를 벌었습니다!")
+    else : 
+        await ctx.author.send(f"{nick}님 {str(start)}모아에서 {str(start+total_profit)}모아가 되었습니다. {total_profit}모아를 잃으셨습니다...")
     print("베팅 명령어 작동 완료")
+
 
 @bot.command()
 async def 구걸(ctx) : 
@@ -405,7 +428,9 @@ async def 구걸(ctx) :
     else : 
         await ctx.author.send("이미 구걸 중입니다.")
     con.close()
-    
+
+
+
 @commands.cooldown(1, 5, commands.BucketType.default)
 @bot.command()
 async def 기부(ctx,nickname2=None,moa=None) : 
@@ -433,7 +458,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         print(user)
         nickname2=datas[1]
         sql2=f"update user_info set moa=moa-{moa} where discorduserid={t1}"
-        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where nickname='{str(nickname2)}'"
+        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where binary nickname='{str(nickname2)}'"
         print(sql3)
         if money1<int(moa) or int(moa)<0 : 
             await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
@@ -453,6 +478,8 @@ async def 기부(ctx,nickname2=None,moa=None) :
     else : 
         ctx.author.send("구걸 상태라 기부 할 수 없습니다.")
     print("기부 명령어 작동 완료")
+
+
 
 @bot.command()
 async def 상점(ctx,item=None) : 
@@ -501,7 +528,9 @@ async def 상점(ctx,item=None) :
             await ctx.author.send(f"모아가 부족합니다!")
     con.commit()
     con.close()
-        
+
+
+
 @commands.cooldown(1, 2, commands.BucketType.default)
 @bot.command()
 async def 럭키팡(ctx) : 
@@ -515,9 +544,32 @@ async def 럭키팡(ctx) :
         moa=i[1]
     await ctx.send(f"누적 횟수 : {count}, 누적 모아 : {moa}")
 
+
 @bot.command()
-async def 에결추천(ctx) : 
-    await ctx.send("준비중입니다")
+async def 리그에결(ctx) : 
+    ace=[]
+    webpage=urlopen("http://gin7174.dothome.co.kr/recommand1v1.html")
+    soup=BeautifulSoup(webpage,"html.parser")
+    div=soup.find_all('a')
+    print(div)
+    for i in div : 
+        ace.append(f"{i['href']}   {re.sub('<.+?>','',str(i),0).strip()}")
+    await ctx.send(random.choice(ace))
+
+@bot.command()
+async def 경제규모(ctx) : 
+    economy=0;
+    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
+    cur=con.cursor()
+    sql=f"select sum(moa) from user_info;"
+    cur.execute(sql)
+    datas= cur.fetchall()
+    for i in datas : 
+        economy=i[0]
+    await ctx.send(f"현재 GnK경제규모는 {economy}모아입니다!")
+        
+
+
 
 @bot.command()
 async def 문의(ctx):
@@ -536,26 +588,30 @@ async def 문의(ctx):
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         ctx.author: discord.PermissionOverwrite(read_messages=True,send_messages=True),
     }
+    sql=f"select nickname from user_info where discorduserid='{ctx.author.id}'"
+    sql2=f"insert into gnkquestion values('{count}','{nickname}')"
     await guild.create_role(name="문의 "+str(count))
     cate = discord.utils.get(guild.categories,name="문의")
     server = ctx.guild
     user = ctx.message.author
     channel = await guild.create_text_channel("문의 "+str(count), overwrites=overwrites,category=cate)
-    owner = bot.get_user(382938103435886592)
-    await owner.send("문의가 들어왔습니다!")
-    await ctx.author.send("문의-"+str(count)+" 게시판이 만들어졌습니다! 이 게시판에서 문의를 해주세요!")
-    sql=f"select nickname from user_info where discorduserid='{ctx.author.id}'"
+    owner = bot.get_user(382938103435886592) 
     cur.execute(sql)
     datas=cur.fetchone()
     for i in datas : 
         nickname=i
-    sql2=f"insert into gnkquestion values('{count}','{nickname}')"
     cur.execute(sql2)
     con.commit()
     con.close()
+    await owner.send("문의가 들어왔습니다!")
+    await ctx.author.send("문의-"+str(count)+" 게시판이 만들어졌습니다! 이 게시판에서 문의를 해주세요!")
+
+
+
 
 @bot.command()
 async def 재발급(ctx) : 
+    salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
     t1 = ctx.author.id
@@ -565,13 +621,16 @@ async def 재발급(ctx) :
         result1=result1+random.choice(string_pool)
     hasing=hashlib.sha512()
     hasing.digest()
-    result=hashlib.sha512(result1.encode('utf-8')).hexdigest()
+    result=hashlib.sha512((result1+salt).encode('utf-8')).hexdigest()
     sql=f"update user_info set login_string='{result}' where discorduserid='{t1}'"
     cur.execute(sql)
     con.commit()
     con.close()
     print(result1)
     await ctx.author.send(f"재발급 된 로그인 문자열은 {result1}입니다.")
+
+
+
 
 @bot.command()
 async def 점수(ctx,nick=None) : 
@@ -593,6 +652,18 @@ async def 점수(ctx,nick=None) :
             score=i[0]
             await ctx.send(f"{nick}의 GnK내전 점수는 {score}점 입니다.")
     con.close()
+
+
+    
+
+
+@bot.command()
+async def 내전(ctx) : 
+    webpage=urlopen("http://gin7174.dothome.co.kr/inclubgame.html")
+    soup=BeautifulSoup(webpage,"html.parser")
+    div=str(soup.find('div'))
+    div=re.sub('<.+?>','',div,0).strip()
+    await ctx.send(div)
 
 
 bot.run(token)
