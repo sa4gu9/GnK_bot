@@ -458,7 +458,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
         print(user)
         nickname2=datas[1]
         sql2=f"update user_info set moa=moa-{moa} where discorduserid={t1}"
-        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where binary nickname='{str(nickname2)}'"
+        sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where nickname='{str(nickname2)}'"
         print(sql3)
         if money1<int(moa) or int(moa)<0 : 
             await ctx.author.send(nickname1+"님 보유량보다 많거나 0원 미만으로 기부할수 없습니다.")
@@ -558,7 +558,7 @@ async def 리그에결(ctx) :
 
 @bot.command()
 async def 경제규모(ctx) : 
-    economy=0;
+    economy=0
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
     cur=con.cursor()
     sql=f"select sum(moa) from user_info;"
