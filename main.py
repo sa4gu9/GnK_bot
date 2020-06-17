@@ -3,7 +3,7 @@
 import sys
 import os.path
 import discord
-from discord.ext import commands
+from discord.ext import commands,tasks
 from discord.utils import get
 import random
 import math
@@ -15,8 +15,13 @@ import hashlib
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import re
+import datetime
+from pytz import timezone
+import threading
 
-version="V1.2"
+#region setting
+
+version="V1.2.1"
 
 members=[]
 
@@ -68,6 +73,7 @@ for i in mapveryhard.split(',') :
 
 print(mapall)
 
+#endregion
 
 @bot.event
 async def on_message(ctx) :
@@ -95,7 +101,50 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print("-----------")
+    bot.loop.create_task(luckypang())
     await bot.change_presence(status=discord.Status.online,activity=discord.Game(f'GnK봇 {version}'))
+    job_thread=threading.Thread(target=luckypang)
+    job_thread.start()
+
+async def luckypang():
+    while True : 
+        timenow=datetime.datetime.now(timezone('Asia/Seoul'))
+        timenow_str=str(timenow)
+        if timenow_str[11:23]=="12:30:00.000" or timenow_str[11:23]=="19:30:00.000" : 
+            channel=bot.get_channel(713050090486366380)
+            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
+            cur=con.cursor()
+            sql=f"select pangprice from betstat"
+            cur.execute(sql)
+            datas=cur.fetchall()
+            getusers=[]
+            for i in datas : 
+                luckym=i[0]
+            for i in range(30) :
+                getusers.append(random.randrange(0,len(members)))
+            getuser=random.choice(getusers)
+            money2=0
+            end2=0
+            nickname2=""
+            discorduser=""
+            sql=f"select nickname,moa,discorduserid from user_info where indexid='{getuser+1}'"
+            cur.execute(sql)
+            datas=cur.fetchall()
+            for i in datas :
+                nickname2=i[0]
+                money2=i[1]
+                discorduser=i[2]    
+            end2=money2+luckym
+            sql=f"update user_info set moa={end2} where indexid={getuser+1}"
+            sql2=f"update betstat set pangprice=0"
+            cur.execute(sql)
+            cur.execute(sql2)
+            con.commit()
+            user=bot.get_user(int(discorduser))
+            await channel.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            con.close()
+        await asyncio.sleep(0.001)
 
 @bot.command()
 async def 안녕(ctx): await ctx.send("안녕")
@@ -322,13 +371,11 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         end=money-lose+profit
                         total_profit=total_profit-lose+profit
                         sql=f"update user_info set moa={end} where discorduserid='{t1}'"
-                        cur.execute(sql)
-                        
+                        cur.execute(sql)                       
                     else :
                         total_profit=total_profit-lose
                         end=money-lose
                         stats[0]=int(stats[0])+1
-                        await ctx.send(str(stats[0])+"번째 실패")
                         if money>=10000000 : 
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.6)
                         elif money>=5000000 :
@@ -349,37 +396,19 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
                         cur.execute(sql)
                         cur.execute(sql2)
-                    if int(stats[0])>=100 : 
+                        if stats[0]<=700 : 
+                            await ctx.send(str(stats[0])+"번째 실패")
+                        else : 
+                            await ctx.send("700회를 넘겨서 실패 횟수를 알려주지 않습니다.")
+                    if stats[0]>=1000 : 
+                        print(stats[0])
                         stats[0]=0
-                        sql=f"update betstat set betcount='0',pangprice='0'"
+                        sql=f"update user_info set moa=moa+100000 where discorduserid='{t1}'"
                         cur.execute(sql)
-                        getusers=[]
-                        luckym=(int(stats[1]))
-                        for i in range(30) :
-                            getusers.append(random.randrange(0,len(members)))
-                        await ctx.send(getusers)
-                        getuser=random.choice(getusers)
-                        money2=0
-                        end2=0
-                        nickname2=""
-                        discorduser=""
-                        sql=f"select nickname,moa,discorduserid from user_info where indexid='{getuser+1}'"
-                        cur.execute(sql)
-                        datas=cur.fetchall()
-                        for i in datas :
-                            nickname2=i[0]
-                            money2=i[1]
-                            discorduser=i[2]    
-                        end2=money2+luckym
-                        sql=f"update user_info set moa='{end2}' where indexid='{getuser+1}'"
-                        cur.execute(sql)
-                        con.commit()
-                        user=bot.get_user(int(discorduser))
-                        await ctx.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
-                        await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
-                    else : 
-                        sql=f"update betstat set betcount='{stats[0]}', pangprice='{stats[1]}'"
-                        cur.execute(sql)
+                        print(nick)
+                        await ctx.send(f"총 1000번째로 실패하여 {nick}님이 100000모아를 받았습니다! 다시 0회부터 시작합니다.")
+                    sql=f"update betstat set betcount={stats[0]}, pangprice={stats[1]}"
+                    cur.execute(sql)
                 else : 
                     await ctx.author.send("모드를 선택해주세요. 1 80% 1.2배, 2 64% 1.6배, 3 48% 2.2배, 4 32% 3배, 5 16% 4배")
                     break
