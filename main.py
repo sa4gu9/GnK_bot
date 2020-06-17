@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1"
+version="V1.2.1.1"
 
 members=[]
 
@@ -110,7 +110,7 @@ async def luckypang():
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[11:23]=="12:30:00.000" or timenow_str[11:23]=="19:30:00.000" : 
+        if timenow_str[11:23]=="12:30:00.000" or timenow_str[11:23]=="18:30:00.000" or timenow_str[11:23]=="08:20:00.000" : 
             channel=bot.get_channel(713050090486366380)
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
             cur=con.cursor()
@@ -371,7 +371,9 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         end=money-lose+profit
                         total_profit=total_profit-lose+profit
                         sql=f"update user_info set moa={end} where discorduserid='{t1}'"
+                        sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'success')"
                         cur.execute(sql)                       
+                        cur.execute(sql3)
                     else :
                         total_profit=total_profit-lose
                         end=money-lose
@@ -394,8 +396,10 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                             stats[1]=int(stats[1])+math.floor(int(moa)*0.05)
                         sql2=f"update user_info set moa={end} where discorduserid='{t1}'"
                         sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
+                        sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'fail')"
                         cur.execute(sql)
                         cur.execute(sql2)
+                        cur.execute(sql3)
                         if stats[0]<=700 : 
                             await ctx.send(str(stats[0])+"번째 실패")
                         else : 
