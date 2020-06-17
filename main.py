@@ -565,13 +565,12 @@ async def 상점(ctx,item=None) :
 async def 럭키팡(ctx) : 
     con = pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
-    sql=f"select * from betstat"
+    sql=f"select pangprice from betstat"
     cur.execute(sql)
     datas = cur.fetchall()
     for i in datas : 
-        count=i[0]
-        moa=i[1]
-    await ctx.send(f"누적 횟수 : {count}, 누적 모아 : {moa}")
+        moa=i[0]
+    await ctx.send(f"누적 모아 : {moa}")
 
 
 @bot.command()
