@@ -644,7 +644,7 @@ async def 상점(ctx,item=None) :
             money=i[1]
             have=i[2]
         if money>=int(need) : 
-            sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need(need)} where discorduserid={ctx.author.id}"
+            sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
             sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
             cur.execute(sql)
             cur.execute(sql2)
