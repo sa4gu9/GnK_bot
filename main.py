@@ -163,7 +163,7 @@ async def GnKcoin():
         timenow_str=str(timenow)
         if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="30:00.000"  : 
             sql="select * from gnkcoin"
-            con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",db="gnkscore")
+            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c&",db="gnkscore")
             cur=con.cursor()
             cur.execute(sql)
             datas=cur.fetchall()
