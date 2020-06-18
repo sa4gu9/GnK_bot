@@ -220,9 +220,9 @@ async def GnKcoin():
                         con.commit()
                         if price>maxprice : 
                             maxprice=price
-                        sql=f"update gnkcoin set maxprice={maxprice}"
-                        cur.execute(sql)
-                        con.commit()
+                            sql=f"update gnkcoin set maxprice={maxprice}"
+                            cur.execute(sql)
+                            con.commit()
                     else : 
                         price=round(price*(1-ratio))
                         sql=f"update gnkcoin set price={price}"
@@ -237,7 +237,7 @@ async def GnKcoin():
                         cur.execute(sql)
                         con.commit()
                 #endregion
-        await asyncio.sleep(0.001)
+        await asyncio.sleep(0.0001)
 
 
 
