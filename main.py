@@ -157,13 +157,13 @@ async def GnKcoin():
     price0=0
     lucky=0
     updown=""
-    ratio=0;
+    ratio=0
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
         if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="30:00.000"  : 
             sql="select * from gnkcoin"
-            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c&",db="gnkscore")
+            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
             cur=con.cursor()
             cur.execute(sql)
             datas=cur.fetchall()
