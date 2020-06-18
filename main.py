@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1.4"
+version="V1.2.1.5"
 
 members=[]
 
@@ -171,10 +171,10 @@ async def GnKcoin():
                 price=i[0]
                 maxprice=i[1]
                 price0=i[2]
-            if timenow_str[11:15]=="09:00" : 
+            if timenow_str[11:16]=="09:00" : 
                 change=1
                 await channel.send("지금부터 오후 8시 40분까지 30분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
-            elif timenow_str[11:15]=="20:40" : 
+            elif timenow_str[11:16]=="20:40" :   
                 change=0
                 await channel.send(f"지금부터 오전 9시까지 GnKcoin의 가격이 바뀌지 않습니다! 현재 가격은 {price}입니다.")
             else : 
@@ -216,6 +216,11 @@ async def GnKcoin():
                         price=round(price*(1+ratio))
                         sql=f"update gnkcoin set price={price}"
                         print(sql)
+                        cur.execute(sql)
+                        con.commit()
+                        if price>maxprice : 
+                            maxprice=price
+                        sql=f"update gnkcoin set maxprice={maxprice}"
                         cur.execute(sql)
                         con.commit()
                     else : 
