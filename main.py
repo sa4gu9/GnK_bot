@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1.3"
+version="V1.2.1.4"
 
 members=[]
 
@@ -189,7 +189,7 @@ async def GnKcoin():
                     await channel.send(f"전 가격이 0원이어서 80만에서 다시 시작합니다! 가지고있던 코인은 리셋됩니다.")
                 elif change==1 : 
                     lucky = random.randrange(100)
-                    if lucky<15 : 
+                    if lucky<40 : 
                         updown="up"
                     else : 
                         updown="down"
@@ -213,13 +213,13 @@ async def GnKcoin():
                     else :
                         ratio=1
                     if updown=="up" : 
-                        price=math.floor(price*(1+ratio))
+                        price=round(price*(1+ratio))
                         sql=f"update gnkcoin set price={price}"
                         print(sql)
                         cur.execute(sql)
                         con.commit()
                     else : 
-                        price=math.floor(price*(1-ratio))
+                        price=round(price*(1-ratio))
                         sql=f"update gnkcoin set price={price}"
                         print(sql)
                         cur.execute(sql)
