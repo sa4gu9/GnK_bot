@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1.1"
+version="V1.2.1.2"
 
 members=[]
 
@@ -101,17 +101,24 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print("-----------")
-    bot.loop.create_task(luckypang())
     await bot.change_presence(status=discord.Status.online,activity=discord.Game(f'GnK봇 {version}'))
     job_thread=threading.Thread(target=luckypang)
+    coin_thread=threading.Thread(target=GnKcoin)
     job_thread.start()
+    coin_thread.start()
+    bot.loop.create_task(luckypang())
+    bot.loop.create_task(GnKcoin())
 
 async def luckypang():
+    nickname2=""
+    discorduser=""
+    money2=0
+    end2=0
+    channel=bot.get_channel(713050090486366380)
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
         if timenow_str[11:23]=="12:30:00.000" or timenow_str[11:23]=="18:30:00.000" or timenow_str[11:23]=="08:20:00.000" : 
-            channel=bot.get_channel(713050090486366380)
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
             cur=con.cursor()
             sql=f"select pangprice from betstat"
@@ -123,10 +130,6 @@ async def luckypang():
             for i in range(30) :
                 getusers.append(random.randrange(0,len(members)))
             getuser=random.choice(getusers)
-            money2=0
-            end2=0
-            nickname2=""
-            discorduser=""
             sql=f"select nickname,moa,discorduserid from user_info where indexid='{getuser+1}'"
             cur.execute(sql)
             datas=cur.fetchall()
@@ -145,6 +148,94 @@ async def luckypang():
             await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             con.close()
         await asyncio.sleep(0.001)
+
+async def GnKcoin():
+    change=1
+    channel=bot.get_channel(713050090486366380)
+    price=0
+    maxprice=0
+    price0=0
+    lucky=0
+    updown=""
+    ratio=0;
+    while True : 
+        timenow=datetime.datetime.now(timezone('Asia/Seoul'))
+        timenow_str=str(timenow)
+        if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="30:00.000"  : 
+            sql="select * from gnkcoin"
+            con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",db="gnkscore")
+            cur=con.cursor()
+            cur.execute(sql)
+            datas=cur.fetchall()
+            for i in datas : 
+                price=i[0]
+                maxprice=i[1]
+                price0=i[2]
+            if timenow_str[11:15]=="09:00" : 
+                change=1
+                await channel.send("지금부터 오후 8시 30분까지 30분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
+            elif timenow_str[11:15]=="20:30" : 
+                change=0
+                await channel.send(f"지금부터 오전 9시까지 GnKcoin의 가격이 바뀌지 않습니다! 현재 가격은 {price}입니다.")
+            else : 
+                #region 가격이 바뀌는 코드
+                if price==0 : 
+                    price=800000
+                    sql=f"update user_info set coin=0"
+                    sql2=f"update gnkcoin set price=800000"
+                    cur.execute(sql)
+                    cur.execute(sql2)
+                    con.commit()
+                    await channel.send(f"전 가격이 0원이어서 80만에서 다시 시작합니다! 가지고있던 코인은 리셋됩니다.")
+                elif change==1 : 
+                    lucky = random.randrange(100)
+                    if lucky<15 : 
+                        updown="up"
+                    else : 
+                        updown="down"
+                    lucky = random.randrange(100)
+                    if lucky< 12 :
+                        ratio=0.01
+                    elif lucky<20:
+                        ratio=0.05
+                    elif lucky<30:
+                        ratio=0.1
+                    elif lucky<45 :
+                        ratio=0.2
+                    elif lucky<62:
+                        ratio=0.3
+                    elif lucky<79 : 
+                        ratio=0.4
+                    elif lucky<83 : 
+                        ratio=0.5
+                    elif lucky<88 :
+                        ratio=0.8
+                    else :
+                        ratio=1
+                    if updown=="up" : 
+                        price=math.floor(price*(1+ratio))
+                            sql=f"update gnkcoin set price={price}"
+                        print(sql)
+                        cur.execute(sql)
+                        con.commit()
+                    else : 
+                        price=math.floor(price*(1-ratio))
+                        sql=f"update gnkcoin set price={price}"
+                        print(sql)
+                        cur.execute(sql)
+                        con.commit()
+                    if not price==0 :
+                        await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다.")
+                    else :
+                        await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다. 0원이므로 거래가 불가능합니다.")
+                        sql=f"update gnkcoin set price0=price0+1"
+                        cur.execute(sql)
+                        con.commit()
+                #endregion
+        await asyncio.sleep(0.001)
+
+
+
 
 @bot.command()
 async def 안녕(ctx): await ctx.send("안녕")
@@ -543,6 +634,8 @@ async def 상점(ctx,item=None) :
             name=i[0]
             need=i[1]
             amount=i[2]
+        if amount==0 : 
+            await ctx.send("이 아이템은 매진되었습니다.")
         sql=f"select nickname,moa,item{int(item)},discorduserid from user_info where discorduserid={ctx.author.id}"
         cur.execute(sql)
         datas = cur.fetchall()
@@ -551,7 +644,7 @@ async def 상점(ctx,item=None) :
             money=i[1]
             have=i[2]
         if money>=int(need) : 
-            sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
+            sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need(need)} where discorduserid={ctx.author.id}"
             sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
             cur.execute(sql)
             cur.execute(sql2)
