@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1.2"
+version="V1.2.1.3"
 
 members=[]
 
@@ -161,7 +161,7 @@ async def GnKcoin():
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="30:00.000"  : 
+        if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="20:00.000" or timenow_str[14:23]=="40:00.000" : 
             sql="select * from gnkcoin"
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
             cur=con.cursor()
@@ -173,8 +173,8 @@ async def GnKcoin():
                 price0=i[2]
             if timenow_str[11:15]=="09:00" : 
                 change=1
-                await channel.send("지금부터 오후 8시 30분까지 30분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
-            elif timenow_str[11:15]=="20:30" : 
+                await channel.send("지금부터 오후 8시 40분까지 30분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
+            elif timenow_str[11:15]=="20:40" : 
                 change=0
                 await channel.send(f"지금부터 오전 9시까지 GnKcoin의 가격이 바뀌지 않습니다! 현재 가격은 {price}입니다.")
             else : 
@@ -778,7 +778,21 @@ async def 점수(ctx,nick=None) :
             await ctx.send(f"{nick}의 GnK내전 점수는 {score}점 입니다.")
     con.close()
 
-
+@bot.command
+async def 코인시세(ctx) : 
+    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+    cur=con.cursor()
+    price=0
+    maxprice=0
+    price0=0
+    sql=f"select * from gnkcoin"
+    cur.execute(sql)
+    datas=cur.fetchall()
+    for i in datas : 
+        price=i[0]
+        maxprice=i[1]
+        price0=i[2]
+    await ctx.send(f"현재 GnKcoin의 시세는 {price}, 최고가는 {maxprice},0원으로 망한 횟수는 {price0}회 입니다.")
     
 
 
