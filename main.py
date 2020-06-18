@@ -214,7 +214,7 @@ async def GnKcoin():
                         ratio=1
                     if updown=="up" : 
                         price=math.floor(price*(1+ratio))
-                            sql=f"update gnkcoin set price={price}"
+                        sql=f"update gnkcoin set price={price}"
                         print(sql)
                         cur.execute(sql)
                         con.commit()
