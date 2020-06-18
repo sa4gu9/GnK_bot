@@ -778,7 +778,7 @@ async def 점수(ctx,nick=None) :
             await ctx.send(f"{nick}의 GnK내전 점수는 {score}점 입니다.")
     con.close()
 
-@bot.command
+@bot.command()
 async def 코인시세(ctx) : 
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
