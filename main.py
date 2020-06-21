@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.1.5"
+version="V1.2.2"
 
 members=[]
 
@@ -118,7 +118,7 @@ async def luckypang():
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[11:23]=="12:30:00.000" or timenow_str[11:23]=="18:30:00.000" or timenow_str[11:23]=="08:20:00.000" : 
+        if timenow_str[11:19]=="12:30:00" or timenow_str[11:19]=="18:30:00" or timenow_str[11:19]=="08:20:00" : 
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
             cur=con.cursor()
             sql=f"select pangprice from betstat"
@@ -147,7 +147,6 @@ async def luckypang():
             await channel.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             con.close()
-        await asyncio.sleep(0.001)
 
 async def GnKcoin():
     change=1
@@ -158,10 +157,12 @@ async def GnKcoin():
     lucky=0
     updown=""
     ratio=0
+    index=0
+    pattern=getpattern()
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[14:23]=="00:00.000" or timenow_str[14:23]=="20:00.000" or timenow_str[14:23]=="40:00.000" : 
+        if timenow_str[14:19]=="00:00" or timenow_str[14:19]=="20:00" or timenow_str[14:19]=="40:00" : 
             sql="select * from gnkcoin"
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
             cur=con.cursor()
@@ -173,7 +174,7 @@ async def GnKcoin():
                 price0=i[2]
             if timenow_str[11:16]=="09:00" : 
                 change=1
-                await channel.send("지금부터 오후 8시 40분까지 30분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
+                await channel.send(f"지금부터 오후 8시 40분까지 20분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
             elif timenow_str[11:16]=="20:40" :   
                 change=0
                 await channel.send(f"지금부터 오전 9시까지 GnKcoin의 가격이 바뀌지 않습니다! 현재 가격은 {price}입니다.")
@@ -188,31 +189,10 @@ async def GnKcoin():
                     con.commit()
                     await channel.send(f"전 가격이 0원이어서 80만에서 다시 시작합니다! 가지고있던 코인은 리셋됩니다.")
                 elif change==1 : 
-                    lucky = random.randrange(100)
-                    if lucky<40 : 
-                        updown="up"
-                    else : 
-                        updown="down"
-                    lucky = random.randrange(100)
-                    if lucky< 12 :
-                        ratio=0.01
-                    elif lucky<20:
-                        ratio=0.05
-                    elif lucky<30:
-                        ratio=0.1
-                    elif lucky<45 :
-                        ratio=0.2
-                    elif lucky<62:
-                        ratio=0.3
-                    elif lucky<79 : 
-                        ratio=0.4
-                    elif lucky<83 : 
-                        ratio=0.5
-                    elif lucky<88 :
-                        ratio=0.8
-                    else :
-                        ratio=1
-                    if updown=="up" : 
+                    if index==9 : 
+                        index=0
+                        pattern=getpattern()
+                        ratio=pattern[index]
                         price=round(price*(1+ratio))
                         sql=f"update gnkcoin set price={price}"
                         print(sql)
@@ -223,12 +203,6 @@ async def GnKcoin():
                             sql=f"update gnkcoin set maxprice={maxprice}"
                             cur.execute(sql)
                             con.commit()
-                    else : 
-                        price=round(price*(1-ratio))
-                        sql=f"update gnkcoin set price={price}"
-                        print(sql)
-                        cur.execute(sql)
-                        con.commit()
                     if not price==0 :
                         await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다.")
                     else :
@@ -237,8 +211,22 @@ async def GnKcoin():
                         cur.execute(sql)
                         con.commit()
                 #endregion
-        await asyncio.sleep(0.0001)
 
+def getpattern() : 
+    pattern=[[]*9]*11
+    pattern[0]=[-0.40,0.10,0.10,0.20,-0.40,-0.01,-0.05,-0.30,-0.30]
+    pattern[1]=[0.20,0.05,-0.40,0.10,-0.01,0.40,-0.05,-0.05,-0.01]
+    pattern[2]=[-0.30,-0.20,-0.01,0.01,0.20,0.30,0.40,0.20,0.40]
+    pattern[3]=[0.50 ,	-0.20, 	0.40, 	0.05 ,	0.99 	,-0.30 ,	0.40 	,0.30 ,	0.05 ]
+    pattern[4]=[-0.50 ,	-0.01 ,	0.80 ,	-0.50 ,	0.10 	,-0.20 ,	-0.30 ,	0.05 	,-0.40 ]
+    pattern[5]=[0.40 ,	0.50 ,	0.01 ,	0.30 	,-0.30, 	-0.80 ,	0.20, 	-0.20, 	-0.40 ]
+    pattern[6]=[0.01 ,	0.10 ,	-0.01 ,	-0.01 ,	0.99, 	0.30 ,	0.50 ,	0.30, 	-0.20 ]
+    pattern[7]=[0.01 ,	-0.10 ,	0.20 ,	0.30 ,	-0.30 	,-0.05, 	-0.01 ,	0.20 ,	-0.05 ]
+    pattern[8]=[0.99 	,-0.40 ,	-0.40 ,	-0.40 ,	-0.40 ,	0.80 ,	0.01 ,	-0.10 ,	-0.05 ]
+    pattern[9]=[-0.10 	,-0.30, 	0.30 	,-0.01, 	-0.01, 	0.40, 	-0.40, 	-0.30, 	-0.99 ]
+    pattern[10]=[0.40 ,	-0.30 ,	-0.99 ,	0.05 ,	0.10 ,	-0.40, 	-0.10, 	0.80,	-0.20 ]
+
+    return pattern[random.choice(random.range(11))]
 
 
 
@@ -809,5 +797,76 @@ async def 내전(ctx) :
     div=re.sub('<.+?>','',div,0).strip()
     await ctx.send(div)
 
+@bot.command()
+async def 코인구매(ctx,amount=None) : 
+    if amount==None : 
+        ctx.send("개수를 입력해주세요.")
+        return
+    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+    cur=con.cursor()
+    moa=0
+    price=0
+    coin=0
+    nickname=""
+    sql=f"select nickname, moa, coin from user_info"
+    cur.execute(sql)
+    datas = cur.fetchall()
+    for i in datas : 
+        nickname=i[0]
+        moa=int(i[1])
+        coin=int(i[2])
+    sql=f"select price from gnkcoin"
+    cur.execute(sql)
+    datas=cur.fetchall()
+    for i in datas : 
+        price=int(i[0])
+    if price==0 : 
+        ctx.send("0원인 상태에서는 구매할수 없습니다.")
+        return
+    else :
+        if moa>=price*int(amount) : 
+            sql=f"update user_info set moa={moa-price*int(amount)}, coin={coin+amount}"
+            cur.execute(sql)
+            con.commit()
+            ctx.send(f"구매에 성공하였습니다! 현재 {nickname}의 보유 개수는 {coin+amount}개 입니다.")
+        else : 
+            ctx.send("모아가 부족합니다.")
+
+@bot.command()
+async def 코인판매(ctx,amount=None) : 
+    if amount==None : 
+        ctx.send("개수를 입력해주세요.")
+        return
+    if amount==0 : 
+        ctx.send("GnK코인을 가지고 있지 않습니다.")
+        return
+    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+    cur=con.cursor()
+    moa=0
+    price=0
+    coin=0
+    nickname=""
+    sql=f"select nickname, moa, coin from user_info"
+    cur.execute(sql)
+    datas = cur.fetchall()
+    for i in datas : 
+        nickname=int(i[0])
+        moa=int(i[1])
+        coin=int(i[2])
+    sql=f"select price from gnkcoin"
+    cur.execute(sql)
+    datas=cur.fetchall()
+    for i in datas : 
+        price=int(i[0])
+    if price==0 : 
+        ctx.send("0원인 상태에서는 판매 할 수 없습니다.")
+        return
+    else :
+        if not int(amount)>coin : 
+            sql=f"update user_info set coin={coin-int(amount)}, moa=moa+{int(amount)*price}"
+            cur.execute(sql)
+            con.commit()
+        else : 
+            ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
 
 bot.run(token)
