@@ -811,7 +811,7 @@ async def 코인구매(ctx,amount=None) :
     price=0
     coin=0
     nickname=""
-    sql=f"select nickname, moa, coin from user_info"
+    sql=f"select nickname, moa, coin from user_info where discorduserid='{ctx.author.id}'"
     cur.execute(sql)
     datas = cur.fetchall()
     for i in datas : 
@@ -849,7 +849,7 @@ async def 코인판매(ctx,amount=None) :
     price=0
     coin=0
     nickname=""
-    sql=f"select nickname, moa, coin from user_info"
+    sql=f"select nickname, moa, coin from user_info where discorduserid='{ctx.author.id}'"
     cur.execute(sql)
     datas = cur.fetchall()
     for i in datas : 
