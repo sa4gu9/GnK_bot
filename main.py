@@ -21,7 +21,7 @@ import threading
 
 #region setting
 
-version="V1.2.2"
+version="V1.2.3"
 
 members=[]
 
@@ -44,9 +44,7 @@ path2='betting stat.txt'
 bot = commands.Bot(command_prefix='GnK')
 token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
 
-map1v1 = '비치 해변 드라이브,쥐라기 공룡 무덤,브로디 비밀의 연구소,네모 산타의 비밀공간,빌리지 고가의 질주,월드 리오 다운힐,도검 구름의 협곡,신화 신들의 세계,WKC 코리아 서킷,차이나 서안 병마용'#10
-
-mapnormal = '브로디 비밀의 연구소,월드 뉴욕 대질주,쥐라기 공룡 결투장,월드 두바이 다운타운,사막 놀라운 공룡 유적지,신화 신들의 세계,비치 해변 드라이브,빌리지 고가의 질주,WKC 싱가폴 마리나 서킷,WKC 상해 서킷,월드 리오 다운힐,빌리지 익스트림 경기장,빌리지 남산,어비스 운명의 갈림길'
+mapnormal = 'WKC 코리아 서킷,쥐라기 공룡 무덤,브로디 비밀의 연구소,월드 뉴욕 대질주,쥐라기 공룡 결투장,월드 두바이 다운타운,사막 놀라운 공룡 유적지,신화 신들의 세계,비치 해변 드라이브,빌리지 고가의 질주,WKC 싱가폴 마리나 서킷,WKC 상해 서킷,월드 리오 다운힐,빌리지 익스트림 경기장,빌리지 남산,어비스 운명의 갈림길'
 
 maphard='월드 이탈리아 피사의 사탑,WKC 브라질 서킷,네모 산타의 비밀공간,네모 강철바위 용광로,도검 구름의 협곡,대저택 은밀한 지하실,차이나 골목길 대질주,차이나 서안 병마용,황금문명 오리엔트 황금 좌표,황금문명 비밀장치의 위협,해적 로비 절벽의 전투,빌리지 만리장성,어비스 바다 소용돌이,사막 빙글빙글 공사장,공동묘지 해골성 대탐험'
 
@@ -55,21 +53,14 @@ mapveryhard='노르테유 익스프레스,광산 3개의 지름길,광산 위험
 
 mapall=[]
 
-
-for i in map1v1.split(',') : 
+for i in mapnormal.split(',') : 
     mapall.append(i)
 
-for i in mapnormal.split(',') : 
-    if not i in mapall : 
-        mapall.append(i)
-
 for i in maphard.split(',') : 
-    if not i in mapall : 
-        mapall.append(i)
+    mapall.append(i)
 
 for i in mapveryhard.split(',') : 
-    if not i in mapall : 
-        mapall.append(i)
+    mapall.append(i)
 
 print(mapall)
 
@@ -118,7 +109,7 @@ async def luckypang():
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[11:19]=="12:30:00" or timenow_str[11:19]=="18:30:00" or timenow_str[11:19]=="08:20:00" : 
+        if timenow_str[11:21]=="12:30:00.0" or timenow_str[11:21]=="18:30:00.0" or timenow_str[11:21]=="08:20:00.0" : 
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
             cur=con.cursor()
             sql=f"select pangprice from betstat"
@@ -165,7 +156,7 @@ async def GnKcoin():
         timenow_str=str(timenow)
         if timenow_str[14:21]=="00:00.0" or timenow_str[14:21]=="20:00.0" or timenow_str[14:21]=="40:00.0" : 
             sql="select * from gnkcoin"
-            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+            con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",db="gnkscore")
             cur=con.cursor()
             cur.execute(sql)
             datas=cur.fetchall()
@@ -213,7 +204,7 @@ async def GnKcoin():
                         cur.execute(sql)
                         con.commit()
                 #endregion
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.01)
 
 
 def getpattern() : 
@@ -236,13 +227,6 @@ def getpattern() :
 
 @bot.command()
 async def 안녕(ctx): await ctx.send("안녕")
-
-@bot.command()
-async def 에결(ctx): await ctx.send("```"+random.choice(map1v1.split(','))+"```")
-
-@bot.command()
-async def 에결리스트(ctx):
-    await ctx.send(("```"+map1v1.replace(",","\n")+"```"))
 
 @bot.command()
 async def 노멀(ctx): await ctx.send("```"+random.choice(mapnormal.split(','))+"```")
