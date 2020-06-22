@@ -851,7 +851,7 @@ async def 코인판매(ctx,amount=None) :
         return
     else :
         if not int(amount)>coin : 
-            sql=f"update user_info set coin={coin-int(amount)}, moa=moa+{int(amount)*price}"
+            sql=f"update user_info set coin={coin-int(amount)}, moa=moa+{int(amount)*price} where discorduserid='{ctx.author.id}'"
             cur.execute(sql)
             con.commit()
             await ctx.send(f"GnKcoin {amount}개를 판매하여 {int(amount)*price}모아를 얻었습니다.")
