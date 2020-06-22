@@ -813,7 +813,7 @@ async def 코인구매(ctx,amount=None) :
         return
     else :
         if moa>=price*int(amount) : 
-            sql=f"update user_info set moa={moa-price*int(amount)}, coin={coin+amount}"
+            sql=f"update user_info set moa={moa-price*int(amount)}, coin=coin+{int(amount)} where discorduserid='{ctx.author.id}'"
             cur.execute(sql)
             con.commit()
             await ctx.send(f"구매에 성공하였습니다! 현재 {nickname}의 보유 개수는 {coin+amount}개 입니다.")
@@ -854,6 +854,7 @@ async def 코인판매(ctx,amount=None) :
             sql=f"update user_info set coin={coin-int(amount)}, moa=moa+{int(amount)*price}"
             cur.execute(sql)
             con.commit()
+            await ctx.send(f"GnKcoin {amount}개를 판매하여 {int(amount)*price}모아를 얻었습니다.")
         else : 
             await ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
 
