@@ -229,7 +229,7 @@ def getpattern() :
     pattern[9]=[-0.10 	,-0.30, 	0.30 	,-0.01, 	-0.01, 	0.40, 	-0.40, 	-0.30, 	-0.99 ]
     pattern[10]=[0.40 ,	-0.30 ,	-0.99 ,	0.05 ,	0.10 ,	-0.40, 	-0.10, 	0.80,	-0.20 ]
 
-    return pattern[random.choice(random.range(11))]
+    return pattern[random.randrange(0,10)]
 
 
 
