@@ -803,7 +803,7 @@ async def 내전(ctx) :
 @bot.command()
 async def 코인구매(ctx,amount=None) : 
     if amount==None : 
-        ctx.send("개수를 입력해주세요.")
+        await ctx.send("개수를 입력해주세요.")
         return
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
@@ -824,24 +824,24 @@ async def 코인구매(ctx,amount=None) :
     for i in datas : 
         price=int(i[0])
     if price==0 : 
-        ctx.send("0원인 상태에서는 구매할수 없습니다.")
+        await ctx.send("0원인 상태에서는 구매할수 없습니다.")
         return
     else :
         if moa>=price*int(amount) : 
             sql=f"update user_info set moa={moa-price*int(amount)}, coin={coin+amount}"
             cur.execute(sql)
             con.commit()
-            ctx.send(f"구매에 성공하였습니다! 현재 {nickname}의 보유 개수는 {coin+amount}개 입니다.")
+            await ctx.send(f"구매에 성공하였습니다! 현재 {nickname}의 보유 개수는 {coin+amount}개 입니다.")
         else : 
-            ctx.send("모아가 부족합니다.")
+            await ctx.send("모아가 부족합니다.")
 
 @bot.command()
 async def 코인판매(ctx,amount=None) : 
     if amount==None : 
-        ctx.send("개수를 입력해주세요.")
+        await ctx.send("개수를 입력해주세요.")
         return
     if amount==0 : 
-        ctx.send("GnK코인을 가지고 있지 않습니다.")
+        await ctx.send("GnK코인을 가지고 있지 않습니다.")
         return
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
@@ -862,7 +862,7 @@ async def 코인판매(ctx,amount=None) :
     for i in datas : 
         price=int(i[0])
     if price==0 : 
-        ctx.send("0원인 상태에서는 판매 할 수 없습니다.")
+        await ctx.send("0원인 상태에서는 판매 할 수 없습니다.")
         return
     else :
         if not int(amount)>coin : 
@@ -870,6 +870,6 @@ async def 코인판매(ctx,amount=None) :
             cur.execute(sql)
             con.commit()
         else : 
-            ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
+            await ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
 
 bot.run(token)
