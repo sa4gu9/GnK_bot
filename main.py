@@ -147,6 +147,7 @@ async def luckypang():
             await channel.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             con.close()
+        await asyncio.sleep(0.1)
 
 async def GnKcoin():
     change=1
@@ -211,6 +212,8 @@ async def GnKcoin():
                         cur.execute(sql)
                         con.commit()
                 #endregion
+        await asyncio.sleep(0.1)
+
 
 def getpattern() : 
     pattern=[[]*9]*11
