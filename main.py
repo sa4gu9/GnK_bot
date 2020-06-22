@@ -853,7 +853,7 @@ async def 코인판매(ctx,amount=None) :
     cur.execute(sql)
     datas = cur.fetchall()
     for i in datas : 
-        nickname=int(i[0])
+        nickname=i[0]
         moa=int(i[1])
         coin=int(i[2])
     sql=f"select price from gnkcoin"
