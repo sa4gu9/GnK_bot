@@ -163,7 +163,7 @@ async def GnKcoin():
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
-        if timenow_str[14:19]=="00:00" or timenow_str[14:19]=="20:00" or timenow_str[14:19]=="40:00" : 
+        if timenow_str[14:21]=="00:00.0" or timenow_str[14:21]=="20:00.0" or timenow_str[14:21]=="40:00.0" : 
             sql="select * from gnkcoin"
             con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
             cur=con.cursor()
@@ -193,17 +193,18 @@ async def GnKcoin():
                     if index==9 : 
                         index=0
                         pattern=getpattern()
-                        ratio=pattern[index]
-                        price=round(price*(1+ratio))
-                        sql=f"update gnkcoin set price={price}"
-                        print(sql)
+                    ratio=pattern[index]
+                    price=round(price*(1+ratio))
+                    sql=f"update gnkcoin set price={price}"
+                    print(sql)
+                    cur.execute(sql)
+                    con.commit()
+                    if price>maxprice : 
+                        maxprice=price
+                        sql=f"update gnkcoin set maxprice={maxprice}"
                         cur.execute(sql)
                         con.commit()
-                        if price>maxprice : 
-                            maxprice=price
-                            sql=f"update gnkcoin set maxprice={maxprice}"
-                            cur.execute(sql)
-                            con.commit()
+                    index=index+1
                     if not price==0 :
                         await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다.")
                     else :
