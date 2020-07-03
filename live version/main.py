@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.2.3.1"
+version="V1.2.8"
 
 members=[]
 
@@ -50,6 +50,8 @@ mapnormal = 'WKC 코리아 서킷,쥐라기 공룡 무덤,브로디 비밀의 �
 maphard='월드 이탈리아 피사의 사탑,WKC 브라질 서킷,네모 산타의 비밀공간,네모 강철바위 용광로,도검 구름의 협곡,대저택 은밀한 지하실,차이나 골목길 대질주,차이나 서안 병마용,황금문명 오리엔트 황금 좌표,황금문명 비밀장치의 위협,해적 로비 절벽의 전투,빌리지 만리장성,어비스 바다 소용돌이,사막 빙글빙글 공사장,공동묘지 해골성 대탐험'
 
 mapveryhard='노르테유 익스프레스,광산 3개의 지름길,광산 위험한 제련소,광산 꼬불꼬불 다운힐,동화 이상한 나라의 문,쥐라기 공룡섬 대모험,어비스 스카이라인,어비스 숨겨진 바닷길,문힐시티 숨겨진 지하터널,공동묘지 마왕의 초대,포레스트 지그재그,팩토리 미완성 5구역,빌리지 붐힐터널'
+
+mapitem='동화 카드왕국의 미로,차이나 빙등 축제,빌리지 두개의 관문,네모 구구 둥지,빌리지 운하,신화 빛의 길,월드 리오 다운힐,쥐라기 아슬아슬 화산 점프,비치 여객선,대저택 루이의 서재,차이나 서안 병마용,차이나 상해 동방명주,노르테유 허공의 갈림길,광산 3개의 지름길,아이스 신나는 하프파이프,사막 피라미드 탐험,포레스트 통나무,포레스트 골짜기'
 
 
 mapall=[]
@@ -96,11 +98,11 @@ async def on_ready():
     print("-----------")
     await bot.change_presence(status=discord.Status.online,activity=discord.Game(f'GnK봇 {version}'))
     job_thread=threading.Thread(target=luckypang)
-    coin_thread=threading.Thread(target=GnKcoin)
+    #coin_thread=threading.Thread(target=GnKcoin)
     job_thread.start()
-    coin_thread.start()
+    #coin_thread.start()
     bot.loop.create_task(luckypang())
-    bot.loop.create_task(GnKcoin())
+    #bot.loop.create_task(GnKcoin())
 
 async def luckypang():
     nickname2=""
@@ -142,6 +144,7 @@ async def luckypang():
             con.close()
         await asyncio.sleep(0.1)
 
+'''
 async def GnKcoin():
     change=1
     channel=bot.get_channel(713050090486366380)
@@ -207,7 +210,7 @@ async def GnKcoin():
                         con.commit()
                 #endregion
         await asyncio.sleep(0.01)
-
+'''
 
 def getpattern() : 
     pattern=[[]*9]*11
@@ -227,39 +230,71 @@ def getpattern() :
 
 
 
+class Map:
+    def __init__(self,mapnormal,maphard,mapveryhard,mapitem):
+        self.normal = mapnormal.split(',')
+        self.hard = maphard.split(',')
+        self.veryhard = mapveryhard.split(',')
+        self.mapall=[]
+        self.mapitem=mapitem.split(',')
+
+        for i in self.normal:
+            self.mapall.append(i)
+        for i in self.hard :
+            self.mapall.append(i)
+        for i in self.veryhard:
+            self.mapall.append(i)
+
+
+    def getAllMap(self):
+        return self.mapall
+
+    def getmap(self,mode,amount=5) : 
+        self.mode=list(mode)
+        self.mode=self.mode[0]
+        print(self.mode)
+        result=[]
+        data=[]
+        printing=""
+        self.amount=list(amount)
+        self.amount=self.amount[0]
+        if self.mode==1 : 
+            data= random.sample(self.normal,self.amount)
+        elif self.mode==2 : 
+            data= random.sample(self.hard,self.amount)
+        elif self.mode==3 : 
+            data= random.sample(self.veryhard,self.amount)
+        elif self.mode==4 :
+            data= random.sample(self.mapall,self.amount)
+        elif self.mode==5 : 
+            data=random.sample(self.mapitem,self.amount)
+        else :
+            return "1:노멀 2:하드 3:베리하드 4:전체(1~3) 5:아이템"
+        for i in data : 
+            printing+=(i+'\n')
+        return f"```{printing}```"
+
+maps=Map(mapnormal,maphard,mapveryhard,mapitem)
+
 @bot.command()
 async def 안녕(ctx): await ctx.send("안녕")
 
 @bot.command()
-async def 노멀(ctx): await ctx.send("```"+random.choice(mapnormal.split(','))+"```")
+async def 맵추첨(ctx,mode,amount) :
+    await ctx.send(f"{maps.getmap({int(mode)},{int(amount)})}")
+
 
 @bot.command()
 async def 노멀리스트(ctx):
     await ctx.send(("```"+mapnormal.replace(",","\n")+"```"))
 
 @bot.command()
-async def 하드(ctx): await ctx.send("```"+random.choice(maphard.split(','))+"```")
-
-@bot.command()
 async def 하드리스트(ctx):
     await ctx.send("```"+maphard.replace(",","\n")+"```")
 
 @bot.command()
-async def 베리하드(ctx): await ctx.send("```"+random.choice(mapveryhard.split(','))+"```")
-
-@bot.command()
 async def 베리하드리스트(ctx):
     await ctx.send("```"+mapveryhard.replace(",","\n")+"```")
-
-@bot.command()
-async def 전체(ctx,amount=None):
-    if amount==None:
-        amount=10
-    data=random.sample(mapall,int(amount))
-    str1=""
-    for i in data:
-        str1=str1+i+"\n"
-    await ctx.send("```"+str1+"```")
 
 @bot.command()
 async def 전체리스트(ctx):
@@ -762,6 +797,16 @@ async def 점수(ctx,nick=None) :
     con.close()
 
 @bot.command()
+async def 내전(ctx) : 
+    webpage=urlopen("http://gin7174.dothome.co.kr/inclubgame.html")
+    soup=BeautifulSoup(webpage,"html.parser")
+    div=str(soup.find('div'))
+    div=re.sub('<.+?>','',div,0).strip()
+    await ctx.send(div)
+
+#region 코인 명령어
+
+@bot.command()
 async def 코인시세(ctx) : 
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
     cur=con.cursor()
@@ -777,16 +822,6 @@ async def 코인시세(ctx) :
         price0=i[2]
     await ctx.send(f"현재 GnKcoin의 시세는 {price}, 최고가는 {maxprice},0원으로 망한 횟수는 {price0}회 입니다.")
     
-
-
-@bot.command()
-async def 내전(ctx) : 
-    webpage=urlopen("http://gin7174.dothome.co.kr/inclubgame.html")
-    soup=BeautifulSoup(webpage,"html.parser")
-    div=str(soup.find('div'))
-    div=re.sub('<.+?>','',div,0).strip()
-    await ctx.send(div)
-
 @bot.command()
 async def 코인구매(ctx,amount=None) : 
     if amount==None : 
@@ -859,5 +894,7 @@ async def 코인판매(ctx,amount=None) :
             await ctx.send(f"GnKcoin {amount}개를 판매하여 {int(amount)*price}모아를 얻었습니다.")
         else : 
             await ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
+
+#endregion
 
 bot.run(token)
