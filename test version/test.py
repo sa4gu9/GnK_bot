@@ -73,13 +73,21 @@ print(mapall)
 #endregion
 
 
+def connectsql(commit) :
+    myhost="localhost"
+    myuser="root"
+    mypsw="dkahfmrptdk00&"
+    mydb="gnkscore"
+    return pymysql.connect(host=myhost,user=myuser,password=mypsw,database=mydb,autocommit=commit)
+
+
 @bot.event
 async def on_message(ctx) :
     role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
     tester = discord.utils.find(lambda r: r.name == '테스터',ctx.guild.roles)
     if role in ctx.author.roles :
         t1=ctx.author.id
-        con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore",autocommit=True)
+        con=connectsql(True)
         cur=con.cursor()
         sql=f"update user_info set moa=moa-4000 where discorduserid={t1}"
         print(sql)
@@ -113,83 +121,13 @@ async def on_ready():
 
 
 
-#class GnKcoin() : 
-'''
-async def GnKcoinupdown():
-    change=1
-    channel=bot.get_channel(709647685417697372)
-    price=0
-    maxprice=0
-    price0=0
-    lucky=0
-    updown=""
-    ratio=0;
-    index=0
-    pattern=getpattern()
-    while True : 
-        timenow=datetime.datetime.now(timezone('Asia/Seoul'))
-        timenow_str=str(timenow)
-        if False : 
-            sql="select * from gnkcoin"
-            con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",db="gnkscore")
-            cur=con.cursor()
-            cur.execute(sql)
-            datas=cur.fetchall()
-            for i in datas : 
-                price=i[0]
-                maxprice=i[1]
-                price0=i[2]
-            if timenow_str[11:16]=="09:00" : 
-                change=1
-                await channel.send(f"지금부터 오후 8시 40분까지 20분마다 GnKcoin의 가격이 바뀝니다! 현재 가격은 {price}입니다.")
-            elif timenow_str[11:16]=="20:40" : 
-                change=0
-                await channel.send(f"지금부터 오전 9시까지 GnKcoin의 가격이 바뀌지 않습니다! 현재 가격은 {price}입니다.")
-            else : 
-                #region 가격이 바뀌는 코드
-                if price==0 : 
-                    price=800000
-                    sql=f"update user_info set coin=0"
-                    sql2=f"update gnkcoin set price=800000"
-                    cur.execute(sql)
-                    cur.execute(sql2)
-                    con.commit()
-                    await channel.send(f"전 가격이 0원이어서 80만에서 다시 시작합니다! 가지고있던 코인은 리셋됩니다.")
-                elif change==1 : 
-                    if index==9 : 
-                        index=0
-                        pattern=getpattern()
-                    ratio=pattern[index]
-                    price=round(price*(1+ratio))
-                    sql=f"update gnkcoin set price={price}"
-                    print(sql)
-                    cur.execute(sql)
-                    con.commit()
-                    if price>maxprice : 
-                        maxprice=price
-                        sql=f"update gnkcoin set maxprice={maxprice}"
-                        cur.execute(sql)
-                        con.commit()
-                    index=index+1
-                    if not price==0 :
-                        await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다.")
-                    else :
-                        await channel.send(f"GnKcoin의 가격이 바꼈습니다! 현재 가격은 {price}입니다. 0원이므로 거래가 불가능합니다.")
-                        sql=f"update gnkcoin set price0=price0+1"
-                        cur.execute(sql)
-                        con.commit()
-                #endregion
-'''
-
-
-
 async def luckypang():
     channel=bot.get_channel(715524455551598642)
     money2=0
     end2=0
     nickname2=""
     discorduser=""
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",db="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     sql=f"select pangprice from betstat"
     cur.execute(sql)
@@ -216,26 +154,6 @@ async def luckypang():
     user=bot.get_user(int(discorduser))
     await channel.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
     con.close()
-
-
-
-
-
-#추후 구현할 예정인 코드
-#await schedule.every().day.at('12:30').do(luckypang)
-#await schedule.every().day.at('18:30').do(luckypang)
-#await schedule.every().day.at('08:20').do(luckypang)
-#await schedule.every().day.at('09:00').do(gnkcoin_change)
-#await schedule.every().day.at('20:40').do(gnkcoin_notchange)
-
-
-
-#main.py 전용 코드
-#await schedule.every().minute.at(":00").do(GnKcoin.GnKcoinupdown)
-#await schedule.every().minute.at(":20").do(GnKcoin.GnKcoinupdown)
-#await schedule.every().minute.at(":40").do(GnKcoin.GnKcoinupdown)
-
-
 
 
 def getpattern() : 
@@ -272,15 +190,7 @@ class Map:
     def getAllMap(self):
         return self.mapall
 
-    def getmap(self,mode,amount=5) : 
-        self.mode=list(mode)
-        self.mode=self.mode[0]
-        print(self.mode)
-        result=[]
-        data=[]
-        printing=""
-        self.amount=list(amount)
-        self.amount=self.amount[0]
+    def get_data(self,mode) :
         if self.mode==1 : 
             data= random.sample(self.normal,self.amount)
         elif self.mode==2 : 
@@ -292,10 +202,25 @@ class Map:
         elif self.mode==5 : 
             data=random.sample(self.mapitem,self.amount)
         else :
-            return "1:노멀 2:하드 3:베리하드 4:전체(1~3) 5:아이템"
-        for i in data : 
-            printing+=(i+'\n')
-        return f"```{printing}```"
+            data="1:노멀 2:하드 3:베리하드 4:전체(1~3) 5:아이템"
+        return data
+
+    def getmap(self,mode,amount=5) : 
+        self.mode=list(mode)
+        self.mode=self.mode[0]
+        print(self.mode)
+        result=[]
+        data=[]
+        printing=""
+        self.amount=list(amount)
+        self.amount=self.amount[0]
+        data=self.get_data(self.mode)
+        if data is list :
+            for i in data : 
+                printing+=(i+'\n')
+            return f"```{printing}```"
+        else :
+            return data
 
 maps=Map(mapnormal,maphard,mapveryhard,mapitem)
 
@@ -341,6 +266,8 @@ async def 버전(ctx):
 async def 가입테스트(ctx): await ctx.send("https://cdn.discordapp.com/attachments/702739996947251234/703170259322011679/unknown.png"+"\n필수 : 연구소, 로비, 협곡, 산타 중 2개 선택\n선택 : 나머지 맵들 중 2개 선택\n\n기회 맵당 3번")
 
 
+
+
 @bot.command()
 async def 킹오hi(ctx): await ctx.send("킹오야 안녕")
 
@@ -357,7 +284,7 @@ async def 새벽(ctx): await ctx.send("에도 켜져있음")
 @bot.command()
 async def 가입(ctx,nickname=None) : 
     nicknames=[]
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore",autocommit=True)
+    con=connectsql(True)
     cur=con.cursor()
     if len(nickname)>3 and len(nickname)<11 : 
         if not ctx.author.id in members : 
@@ -365,8 +292,6 @@ async def 가입(ctx,nickname=None) :
             result1=""
             for i in range(20) : 
                 result1=result1+random.choice(string_pool)
-            print(string)
-            print(members)
             num_user=0
             sql="select * from count_user;"
             sql2="insert into user_info (indexid,nickname,discorduserid,login_string) values (%s,%s,%s,%s)"
@@ -375,26 +300,19 @@ async def 가입(ctx,nickname=None) :
             cur.execute(sql)
             datas=cur.fetchall()
             for data in datas :
-                print(data)
                 num_user=data[0]
-            print(num_user)
             cur.execute(sql3)
             datas=cur.fetchall()
             nicks=str(nickname).lower()
             for data in datas : 
-                print(data)
                 temp=str(data[0]).lower()
                 nicknames.append(temp)
-                print(nicknames)
-                print(nickname)
             if not nickname in nicknames : 
                 salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
                 hasing=hashlib.sha512()
                 hasing.digest()
                 result=hashlib.sha512((result1+salt).encode('utf-8')).hexdigest()
-                print(result1)
                 val = (str(num_user+1),str(nickname),str(ctx.author.id),str(result))
-                print(val)
                 cur.execute(sql2,val)
                 cur.execute(sql4)
                 con.close()
@@ -411,15 +329,13 @@ async def 가입(ctx,nickname=None) :
 @commands.cooldown(1, 1, commands.BucketType.default)
 @bot.command()
 async def 모아(ctx,nickname=None) : 
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     nick=""
     money=0
     if nickname==None : 
         t1 = ctx.author.id
-        print(t1)
         sql=f"select nickname,moa from user_info where discorduserid='{t1}'"
-        print(sql)
         cur.execute(sql)
         datas=cur.fetchall()
         for i in datas : 
@@ -428,16 +344,49 @@ async def 모아(ctx,nickname=None) :
         await ctx.author.send(f'{nick}님의 모아는 {money}모아 입니다.')
     else : 
         sql=f"select moa from user_info where nickname='{nickname}'"
-        print(sql)
         cur.execute(sql)
         data = cur.fetchall()
         for i in data :
-            print(data)
             money=i[0]
         await ctx.send(f'{nickname} 님의 모아는 {money}모아 입니다.')
     con.close()
-    print("모아 명령어 작동 완료")
 
+def get_chance_multiple(mode) :
+    if mode==1 : 
+        chance=80
+        multiple=1.2
+    if mode==2 : 
+        chance=64
+        multiple=1.6
+    if mode==3 : 
+        chance=48
+        multiple=2.2
+    if mode==4 : 
+        chance=32
+        multiple=3
+    if mode==5 : 
+        chance=16
+        multiple=4       
+    return chance,multiple
+
+def get_stats1(stat,money,moa) :
+    if money>=10000000 : 
+        return_stat=int(stat)+math.floor(moa*0.6)
+    elif money>=5000000 :
+        return_stat=int(stat)+math.floor(moa*0.35)
+    elif money>=4000000 : 
+        return_stat=int(stat)+math.floor(moa*0.3)
+    elif money>=3000000 : 
+        return_stat=int(stat)+math.floor(moa*0.25)
+    elif money>=2000000 : 
+        return_stat=int(stat)+math.floor(moa*0.2)
+    elif money>=1000000 : 
+        return_stat=int(stat)+math.floor(moa*0.15)
+    elif money>=500000 : 
+        return_stat=int(stat)+math.floor(moa*0.1)
+    else : 
+        return_stat=int(stat)+math.floor(moa*0.05)
+    return return_stat
 
 
 @commands.cooldown(1, 10, commands.BucketType.user)
@@ -450,23 +399,17 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
         start=0
         stats=[]
         for num in range(int(repeat)) : 
-            con = pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore",autocommit=True)
+            con = connectsql(True)
             cur=con.cursor()
             sql=f"select * from betstat"
             cur.execute(sql)
             datas=cur.fetchall()
             for i in datas : 
-                print(i)
                 stats.append(i[0])
                 stats.append(i[1])
             role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
             if not role in ctx.author.roles :
-                end=0
-                lose=0
-                chance=0
-                profit=0
-                money=0
-                multiple=0
+                end,lose,chance,profit,money,multiple=0,0,0,0,0,0
                 t1 = ctx.author.id
                 nick=""
                 sql=f"select nickname,moa from user_info where discorduserid='{t1}'"
@@ -485,21 +428,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     return
                 else :
                     lose=int(moa)
-                    if int(mode)==1 : 
-                        chance=80
-                        multiple=1.2
-                    if int(mode)==2 : 
-                        chance=64
-                        multiple=1.6
-                    if int(mode)==3 : 
-                        chance=48
-                        multiple=2.2
-                    if int(mode)==4 : 
-                        chance=32
-                        multiple=3
-                    if int(mode)==5 : 
-                        chance=16
-                        multiple=4       
+                    chance,multiple=get_chance_multiple(int(mode))      
                 if int(mode)<6 and int(mode)>0 : 
                     result=random.randrange(0,100)
                     if result<chance : 
@@ -515,22 +444,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                         total_profit=total_profit-lose
                         end=money-lose
                         stats[0]=int(stats[0])+1
-                        if money>=10000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.6)
-                        elif money>=5000000 :
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.35)
-                        elif money>=4000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.3)
-                        elif money>=3000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.25)
-                        elif money>=2000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.2)
-                        elif money>=1000000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.15)
-                        elif money>=500000 : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.1)
-                        else : 
-                            stats[1]=int(stats[1])+math.floor(int(moa)*0.05)
+                        stats[1]=get_stats1(int(stats[1]),money,int(moa))
                         sql2=f"update user_info set moa={end} where discorduserid='{t1}'"
                         sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
                         sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'fail')"
@@ -569,7 +483,7 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
 @bot.command()
 async def 구걸(ctx) : 
     role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles)
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     if not role in ctx.author.roles :
         hour=7
@@ -604,7 +518,7 @@ async def 구걸(ctx) :
 @commands.cooldown(1, 5, commands.BucketType.default)
 @bot.command()
 async def 기부(ctx,nickname2=None,moa=None) : 
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     role = discord.utils.find(lambda r: r.name == 'Muted',ctx.guild.roles) 
     if not role in ctx.author.roles :
@@ -618,14 +532,11 @@ async def 기부(ctx,nickname2=None,moa=None) :
         sql4=f"select discorduserid,nickname from user_info where nickname='{str(nickname2)}'"
         cur.execute(sql)
         datas=cur.fetchone()
-        print(datas)
         money1=datas[0]
         nickname1=datas[1]
         cur.execute(sql4)
         datas=cur.fetchone()
-        print(datas)  
         user=bot.get_user(int(datas[0]))
-        print(user)
         nickname2=datas[1]
         sql2=f"update user_info set moa=moa-{moa} where discorduserid={t1}"
         sql3=f"update user_info set moa=moa+truncate({moa}*0.9,0) where binary nickname='{str(nickname2)}'"
@@ -653,7 +564,7 @@ async def 기부(ctx,nickname2=None,moa=None) :
 
 @bot.command()
 async def 상점(ctx,item=None) : 
-    con = pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con = connectsql(False)
     cur=con.cursor()
     count=0
     have=0
@@ -704,7 +615,7 @@ async def 상점(ctx,item=None) :
 @commands.cooldown(1, 2, commands.BucketType.default)
 @bot.command()
 async def 럭키팡(ctx) : 
-    con = pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con = connectsql(False)
     cur=con.cursor()
     sql=f"select pangprice from betstat"
     cur.execute(sql)
@@ -727,8 +638,8 @@ async def 리그에결(ctx) :
 
 @bot.command()
 async def 경제규모(ctx) : 
-    economy=0;
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore",autocommit=True)
+    economy=0
+    con=connectsql(False)
     cur=con.cursor()
     sql=f"select sum(moa) from user_info;"
     cur.execute(sql)
@@ -744,7 +655,7 @@ async def 경제규모(ctx) :
 async def 문의(ctx):
     count=0
     nickname=""
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     sql = f"select count(*) from gnkquestion"
     cur.execute(sql)
@@ -781,7 +692,7 @@ async def 문의(ctx):
 @bot.command()
 async def 재발급(ctx) : 
     salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     t1 = ctx.author.id
     string_pool=string.ascii_letters+string.digits
@@ -804,7 +715,7 @@ async def 재발급(ctx) :
 @bot.command()
 async def 점수(ctx,nick=None) : 
     score=0
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
+    con=connectsql(False)
     cur=con.cursor()
     if nick==None : 
         sql=f"select score from user_info where discorduserid={ctx.author.id}"
@@ -823,7 +734,10 @@ async def 점수(ctx,nick=None) :
     con.close()
 
 
-    
+@bot.command()
+async def 강화(ctx) :
+    print("개발중")
+
 
 
 @bot.command()
@@ -833,115 +747,6 @@ async def 내전(ctx) :
     div=str(soup.find('div'))
     div=re.sub('<.+?>','',div,0).strip()
     await ctx.send(div) 
-
-#region 코인 명령어
-'''
-@bot.command()
-async def 코인시세(ctx) : 
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
-    cur=con.cursor()
-    price=0
-    maxprice=0
-    price0=0
-    sql=f"select * from gnkcoin"
-    cur.execute(sql)
-    datas=cur.fetchall()
-    for i in datas : 
-        price=i[0]
-        maxprice=i[1]
-        price0=i[2]
-    await ctx.send(f"현재 GnKcoin의 시세는 {price}, 최고가는 {maxprice},0원으로 망한 횟수는 {price0}회 입니다.")
-
-@bot.command()
-async def 코인구매(ctx,amount=None) : 
-    if amount==None : 
-        await ctx.send("개수를 입력해주세요.")
-        return
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
-    cur=con.cursor()
-    moa=0
-    price=0
-    coin=0
-    nickname=""
-    sql=f"select nickname, moa, coin from user_info where discorduserid={ctx.author.id}"
-    cur.execute(sql)
-    datas = cur.fetchall()
-    for i in datas : 
-        nickname=i[0]
-        moa=int(i[1])
-        coin=int(i[2])
-    sql=f"select price from gnkcoin"
-    cur.execute(sql)
-    datas=cur.fetchall()
-    for i in datas : 
-        price=int(i[0])
-    if price==0 : 
-        await ctx.send("0원인 상태에서는 구매할수 없습니다.")
-        return
-    else :
-        print(f"{moa}     {price*int(amount)}")
-        if moa>=price*int(amount) : 
-            sql=f"update user_info set moa={moa-price*int(amount)}, coin=coin+{int(amount)} where discorduserid='{ctx.author.id}'"
-            cur.execute(sql)
-            con.commit()
-            await ctx.send(f"구매에 성공하였습니다! 현재 {nickname}의 보유 개수는 {coin+int(amount)}개 입니다.")
-        else : 
-            await ctx.send("모아가 부족합니다.")
-
-@bot.command()
-async def 코인판매(ctx,amount=None) : 
-    if amount==None : 
-        await ctx.send("개수를 입력해주세요.")
-        return
-    con=pymysql.connect(host="localhost",user="root",password="dkahfmrptdk00&",database="gnkscore")
-    cur=con.cursor()
-    moa=0
-    price=0
-    coin=0
-    nickname=""
-    sql=f"select nickname, moa, coin from user_info where discorduserid={ctx.author.id}"
-    cur.execute(sql)
-    datas = cur.fetchall()
-    for i in datas : 
-        nickname=i[0]
-        moa=int(i[1])
-        coin=int(i[2])
-    if coin==0 : 
-        await ctx.send("GnK코인을 가지고 있지 않습니다.")
-        return
-    sql=f"select price from gnkcoin"
-    cur.execute(sql)
-    datas=cur.fetchall()
-    for i in datas : 
-        price=int(i[0])
-    if price==0 : 
-        await ctx.send("0원인 상태에서는 판매 할 수 없습니다.")
-        return
-    else :
-        if not int(amount)>coin : 
-            sql=f"update user_info set coin={coin-int(amount)}, moa=moa+{int(amount)*price} where nickname='{nickname}'"
-            cur.execute(sql)
-            con.commit()
-            await ctx.send(f"GnKcoin {amount}개를 판매하여 {int(amount)*price}모아를 얻었습니다.")
-        else : 
-            await ctx.send(f"보유량을 넘었습니다. 현재 {nickname}의 보유 개수는 {coin}개 입니다.")
-'''
-#endregion
-
-
-'''
-@bot.command()
-async def 조회(ctx) : 
-    url='https://api.nexon.co.kr/kart/v1.0/users/1644423776/matches?start_date=&end_date=&offset=0&limit=10&match_types='
-    APP_key={'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiMTY0NDQyMzc3NiIsImF1dGhfaWQiOiIyIiwidG9rZW5fdHlwZSI6IkFjY2Vzc1Rva2VuIiwic2VydmljZV9pZCI6IjQzMDAxMTM5MyIsIlgtQXBwLVJhdGUtTGltaXQiOiIyMDAwMDoxMCIsIm5iZiI6MTU3NDY3MTM3NSwiZXhwIjoxNjM3NzQzMzc1LCJpYXQiOjE1NzQ2NzEzNzV9.MrI87qOGv3ejTAKrPC5yZxZi6VO3zYnZvaUAdDKchIE'}
-    headers={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
-    data=urllib.parse.urlencode(APP_key)
-    data=data.encode('ascii')
-    request=urllib.request.Request(url,data,headers)
-    with urllib.request.urlopen(request) as response : 
-        page=response.read()
-    print(page)
-'''
 
 # @bot.command()
 # async def 맵밴픽
