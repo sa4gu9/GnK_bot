@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.3.1"
+version="V1.3.1.1"
 
 members=[]
 
@@ -826,14 +826,17 @@ async def 강화(ctx) :
     moa=int(data[0])
     level=int(data[1])
 
+    
+    if level == 0 :
+        await ctx.author.send("의문의 물건을 가지고 있지 않습니다.")
+        return
+
     need=get_need(level)
     if need>moa :
-        ctx.author.send(f"{need-moa}모아가 부족합니다.")
+        await ctx.author.send(f"{need-moa}모아가 부족합니다.")
+        return
     if level == 30 :
         await ctx.author.send("이미 의문의 물건 +30을 가지고 있습니다.")
-        return
-    elif level == 0 :
-        await ctx.author.send("의문의 물건을 가지고 있지 않습니다.")
         return
 
     if level !=29 :
@@ -949,4 +952,4 @@ async def 순위(ctx) :
 
 
 
-bot.run(test_token)
+bot.run(token)
