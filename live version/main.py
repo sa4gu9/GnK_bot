@@ -22,10 +22,9 @@ import schedule
 
 #region setting
 
-version="V1.3"
+version="V1.3.1"
 
 members=[]
-
 
 def connectsql(commit) :
     myhost="35.202.81.62"
@@ -144,9 +143,9 @@ async def luckypang():
         elif timenow_str[11:21]=="00:00:00.0" :
             con=connectsql(True)
             cur=con.cursor()
-            sql="update gnkstore set amount=40 where itemid=101"
+            sql="update gnkstore set amount=100 where itemid=101"
             cur.execute(sql)
-            await channel.send("상점에 있는 의문의 물건 +1의 개수가 40개가 되었습니다.")
+            await channel.send("상점에 있는 의문의 물건 +1의 개수가 100개가 되었습니다.")
         await asyncio.sleep(0.1)
 
 class Map:
@@ -511,14 +510,9 @@ async def 기부(ctx,nickname2=None,moa=None) :
 
 @bot.command()
 async def 상점(ctx,item=None) : 
-    con = connectsql(False)
+    con = connectsql(True)
     cur=con.cursor()
-    count=0
-    have=0
-    end=0
-    money=0
-    need=0
-    amount=0
+    count,have,end,money,need,amount=0,0,0,0,0,0
     nickname=""
     name=""
     if item==None : 
@@ -529,55 +523,52 @@ async def 상점(ctx,item=None) :
             count=count+1
             await ctx.send(f"{i[0]}    {i[1]}    {i[2]}모아  남은 개수 : {i[3]}")
         con.close()
-    elif int(item)>=1 or int(item)<=count : 
-        nickname=""
-        sql=f"select name,price,amount from gnkstore where itemid={int(item)}"
+    elif int(item)>=1 : 
+        sql=f"select EXISTS (select * from gnkstore where itemid={int(item)}) as success"
         cur.execute(sql)
-        datas=cur.fetchall()
-        for i in datas : 
-            name=i[0]
-            need=i[1]
-            amount=i[2]
-        if int(amount)<0 :
-            await ctx.author.send(f"{name}은 매진되었습니다.")
+        data=cur.fetchone()
+        if data[0]==0 :
+            await ctx.send("존재하지 않는 아이템 아이디입니다.")
             return
-        if int(item)>100 :
-            sql=f"select nickname,moa,unknown_level,discorduserid from user_info where discorduserid={ctx.author.id}"
-        else : 
-            sql=f"select nickname,moa,item{int(item)},discorduserid from user_info where discorduserid={ctx.author.id}"
+        nickname=""
+        sql=f"select name,price,amount from gnkstore where itemid={int(item)}"    
         cur.execute(sql)
-        datas = cur.fetchall()
-        for i in datas : 
-            nickname=i[0]
-            money=i[1]
-            have=i[2]
+        datas=cur.fetchone()
+        name=datas[0]
+        need=datas[1]
+        amount=datas[2]
+        if int(amount)<=0 :
+            await ctx.send(f"{name}은 매진되었습니다.")
+            return
+        if int(item)>100 and int(item)<130 :
+            sql=f"select nickname,moa,unknown_level from user_info where discorduserid={ctx.author.id}"
+        else : 
+            sql=f"select nickname,moa,item{int(item)} from user_info where discorduserid={ctx.author.id}"
+        cur.execute(sql)
+        datas = cur.fetchone()
+        nickname=datas[0]
+        money=datas[1]
+        have=datas[2]
         if money>=int(need) : 
-            if int(item)>100 : 
-                c_reinforce=0
-                sql=f"select unknown_level from user_info where discorduserid={ctx.author.id}"
-                cur.execute(sql)
-                data=cur.fetchone()
-                c_reinforce=int(data[0])
-                if(c_reinforce>0) :
-                    await ctx.author.send(f"의문의 물건은 1개만 구입할수 있습니다.")
-                    return
+            if int(item)>100 and int(item)<130 and int(have)>0 :
+                await ctx.author.send(f"의문의 물건은 1개만 구입할수 있습니다.")
+                return
+            elif int(item)>100 and int(item)<130 and int(have)==0 :
                 sql=f"update user_info set unknown_level = {int(item)-100}, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
                 sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
-            else :
+                cur.execute(sql)
+                cur.execute(sql2)
+                await ctx.send(f"{nickname}님이 {name}을 구입하였습니다!")
+                return
+            elif int(item)<100 :
                 sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
                 sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
-            cur.execute(sql)
-            cur.execute(sql2)
-            await ctx.author.send(f"{name}을 구입하는데 성공했습니다!")
-            if int(item)>100 :
-                await ctx.send(f"{nickname}님이 {name}을 구입하였습니다!")
-            else :
+                cur.execute(sql)
+                cur.execute(sql2)
                 await ctx.send(f"{nickname}님이 {name}을 구입하였습니다! 현재 {nickname}님의 보유 개수는 {have+1}개 입니다.")
+                return
         else : 
             await ctx.author.send(f"모아가 부족합니다!")
-    con.commit()
-    con.close()
-
 
 
 @commands.cooldown(1, 2, commands.BucketType.default)
@@ -814,7 +805,7 @@ def get_price(level) :
 
 
 
-
+@commands.cooldown(1, 3, commands.BucketType.default)
 @bot.command()
 async def 강화(ctx) :
     con=connectsql(True)
@@ -880,6 +871,8 @@ async def 강화(ctx) :
         change=-10
     
     print(change)
+    if change<=0 and level>=14:
+        setluckypang(need)
 
     if change!=-10 :
         sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{need} where discorduserid={ctx.author.id}"
@@ -888,14 +881,29 @@ async def 강화(ctx) :
         elif change<0 :
             await ctx.send(f"강화 레벨 {level}에서 {-change} 감소! 현재 레벨 : {level+change}")
         else :
-            await ctx.send(f"강화 레벨 {level}에서 변동 없음! 현재 레벨 : {level}")      
+            await ctx.send(f"강화 레벨 {level}에서 변동 없음! 현재 레벨 : {level}")
     else :
         sql=f"update user_info set unknown_level=0,moa=moa-{need} where discorduserid={ctx.author.id}"
         await ctx.send(f"의문의 물건 +{level} 파괴...")
+        setdestroy(level)
     
     cur.execute(sql)
     con.close()
 
+
+def setluckypang(need) :
+    con=connectsql(True)
+    cur=con.cursor()
+    sql=f"update betstat set pangprice=pangprice+{int(need/10)}"
+    cur.execute(sql)
+    con.close()
+
+def setdestroy(level) :
+    con=connectsql(True)
+    cur=con.cursor()
+    sql=f"update destroy_table set destroy=destroy+1 where level={level}"
+    cur.execute(sql)
+    con.close()
 
 @bot.command()
 async def 내전(ctx) : 
@@ -905,6 +913,40 @@ async def 내전(ctx) :
     div=re.sub('<.+?>','',div,0).strip()
     await ctx.send(div)
 
+@bot.command()
+async def 통계(ctx) : 
+    showlist=""
+    con=connectsql(False)
+    cur=con.cursor()
+    sql="select * from destroy_table"
+    cur.execute(sql)
+    datas= cur.fetchall()
+    showlist+="```레벨별 파괴횟수\n"
+    for data in datas :
+        showlist+=f"{data[0]}   {data[1]}\n"
+    showlist+='```'
+    await ctx.send(showlist)
 
 
-bot.run(token)
+    
+
+@bot.command()
+async def 순위(ctx) :
+    rank=1
+    datalist=""
+    con=connectsql(False)
+    cur=con.cursor()
+    sql=f"select nickname, moa from user_info order by moa DESC limit 5"
+    cur.execute(sql)
+    data=cur.fetchall()
+    datalist+='```'
+    for i in data :
+        datalist+=f"{rank}위  {'%11s'%i[0]}   {'%13s'%format(i[1],',')}모아\n"
+        rank+=1
+    datalist+='```'
+    await ctx.send(datalist)
+
+
+
+
+bot.run(test_token)
