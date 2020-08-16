@@ -22,9 +22,14 @@ import schedule
 
 #region setting
 
-version="V1.3.1.1"
+version="V1.3.2"
 
-members=[]
+def makestring() :
+    result1=""
+    string_pool=string.ascii_letters+string.digits
+    for i in range(20) :
+        result1=result1+random.choice(string_pool)
+    return result1
 
 def connectsql(commit) :
     myhost="35.202.81.62"
@@ -33,15 +38,6 @@ def connectsql(commit) :
     mydb="gnkscore"
     mycommit=commit
     return pymysql.connect(host=myhost,user=myuser,password=mypsw,database=mydb,autocommit=mycommit)
-
-con = connectsql(True)
-cur=con.cursor()
-sql="select * from user_info;"
-cur.execute(sql)
-datas=cur.fetchall()
-con.close()
-for data in datas : 
-    members.append(data[7])
 
 bot = commands.Bot(command_prefix='GnK')
 token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
@@ -102,44 +98,46 @@ async def on_ready():
     job_thread.start()
     bot.loop.create_task(luckypang())
 
+
 async def luckypang():
-    nickname2=""
-    discorduser=""
-    money2=0
-    end2=0
+    nickname=""
+    discorduser=0
+    money=0
     channel=bot.get_channel(713050090486366380)
     while True : 
         timenow=datetime.datetime.now(timezone('Asia/Seoul'))
         timenow_str=str(timenow)
         if timenow_str[11:21]=="12:30:00.0" or timenow_str[11:21]=="18:30:00.0" or timenow_str[11:21]=="08:20:00.0" : 
-            con=connectsql(False)
+            con=connectsql(True)
             cur=con.cursor()
-            sql=f"select pangprice from betstat"
+            bonus_luckypang=random.randrange(100)
+            sql=f"select pangprice from betstat"    
             cur.execute(sql)
-            datas=cur.fetchall()
-            getusers=[]
-            for i in datas : 
-                luckym=i[0]
-            for i in range(30) :
-                getusers.append(random.randrange(0,len(members)))
-            getuser=random.choice(getusers)
-            sql=f"select nickname,moa,discorduserid from user_info where indexid='{getuser+1}'"
+            data=cur.fetchone()
+            luckym=int(data[0])
+            sql="select nickname,moa,discorduserid from user_info order by rand() limit 1"
             cur.execute(sql)
-            datas=cur.fetchall()
-            for i in datas :
-                nickname2=i[0]
-                money2=i[1]
-                discorduser=i[2]    
-            end2=money2+luckym
-            sql=f"update user_info set moa={end2} where indexid={getuser+1}"
-            sql2=f"update betstat set pangprice=0"
+            data=cur.fetchone()
+            nickname=data[0]
+            money=int(data[1])
+            discorduser=int(data[2])
+            sql=f"update user_info set moa=moa+{luckym} where discorduserid={discorduser}"            
             cur.execute(sql)
-            cur.execute(sql2)
-            con.commit()
             user=bot.get_user(int(discorduser))
-            await channel.send(str(nickname2)+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
-            await user.send(str(nickname2)+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
-            con.close()
+            await channel.send(nickname+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            await user.send(nickname+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            if bonus_luckypang<5 :
+                sql=f"select nickname,moa,discorduserid from user_info where nickname not in('{nickname}') order by rand() limit 1"
+                nickname=data[0]
+                money=int(data[1]/10)
+                discorduser=int(data[2])
+                sql=f"update user_info set moa=moa+{int(luckym)} where discorduserid={discorduser}"
+                cur.execute(sql)
+                user=bot.get_user(int(discorduser))
+                await channel.send(nickname+"님이 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+                await user.send(nickname+"님 축하합니다! 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
+            sql=f"update betstat set pangprice=0"
+            cur.execute(sql)        
         elif timenow_str[11:21]=="00:00:00.0" :
             con=connectsql(True)
             cur=con.cursor()
@@ -166,7 +164,9 @@ class Map:
     def getAllMap(self):
         return self.mapall
 
-    def get_data(self,mode) :
+    def get_data(self,mode,amount) :
+        self.mode=mode
+        self.amount=amount
         if self.mode==1 : 
             data= random.sample(self.normal,self.amount)
         elif self.mode==2 : 
@@ -182,16 +182,13 @@ class Map:
         return data
 
     def getmap(self,mode,amount=5) : 
-        self.mode=list(mode)
-        self.mode=self.mode[0]
-        print(self.mode)
-        result=[]
-        data=[]
+        self.mode=list(mode)[0]
+        self.amount=list(amount)[0]
+        data=None
         printing=""
-        self.amount=list(amount)
-        self.amount=self.amount[0]
-        data=self.get_data(self.mode)
-        if data is list :
+        data=self.get_data(self.mode,self.amount)
+        print(type(data))
+        if type(data) is list :
             for i in data : 
                 printing+=(i+'\n')
             return f"```{printing}```"
@@ -208,6 +205,7 @@ async def 맵추첨(ctx,mode,amount) :
     await ctx.send(f"{maps.getmap({int(mode)},{int(amount)})}")
 
 async def all_list(ctx,mode) : 
+    print(mode)
     if mode==1 : 
         await ctx.send(("```"+mapnormal.replace(",","\n")+"```"))
     elif mode==2 : 
@@ -223,9 +221,9 @@ async def all_list(ctx,mode) :
         await ctx.send("```"+mapitem.replace(",","\n")+"```")
 
 @bot.command()
-async def 리스트(ctx,mode=None):
+async def 리스트(ctx,mode=100):
     if int(mode)>0 and int(mode)<=5 :
-        all_list(ctx,int(mode))
+        await all_list(ctx,int(mode))
     else :
         await ctx.send("1:노멀 2:하드 3:베리하드 4:전체(1~3) 5:아이템") 
 
@@ -252,41 +250,26 @@ async def 가입(ctx,nickname=None) :
     con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
     cur=con.cursor()
     if len(nickname)>3 and len(nickname)<11 : 
-        if not ctx.author.id in members : 
-            string_pool=string.ascii_letters+string.digits
-            result1=""
-            for i in range(20) : 
-                result1=result1+random.choice(string_pool)
-            num_user=0
-            sql="select * from count_user;"
-            sql2="insert into user_info (indexid,nickname,discorduserid,login_string) values (%s,%s,%s,%s)"
-            sql3="select nickname from user_info;"
-            sql4=f"update count_user set num_user = num_user+1"
-            cur.execute(sql)
-            datas=cur.fetchall()
-            for data in datas :
-                num_user=data[0]
-            cur.execute(sql3)
-            datas=cur.fetchall()
-            nicks=str(nickname).lower()
-            for data in datas : 
-                temp=str(data[0]).lower()
-                nicknames.append(temp)
-            if not nickname in nicknames : 
-                salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
-                hasing=hashlib.sha512()
-                hasing.digest()
-                result=hashlib.sha512((result1+salt).encode('utf-8')).hexdigest()
-                val = (str(num_user+1),str(nickname),str(ctx.author.id),str(result))
-                cur.execute(sql2,val)
-                cur.execute(sql4)
-                con.close()
-                members.append(ctx.author.id)
-                await ctx.author.send(f"가입 성공! 당신의 로그인 문자열은 {result1}입니다.")
-            else : 
-                await ctx.author.send("사용할수 없는 닉네임입니다.")
+        sql=f"select EXISTS (select * from user_info where discorduserid={ctx.author.id})"
+        cur.execute(sql)
+        data=cur.fetchone()
+        if int(data)==0 :
+            sql=f"select EXISTS (select * from user_info where nickname={nickname})"
+            cur.execute()
+            data=cur.fetchone()
+            if int(data)==0:
+                result1=makestring()
+                sql="insert into user_info (nickname,discorduserid,login_string) values (%s,%s,%s)"
+                val=(str(nickname),ctx.author.id,result1)
+                cur.execute(sql,val)
+                await ctx.author.send(f"가입에 성공했습니다. 고유 확인 문자열은 {result1}입니다.")
+                return
+            else :
+                await ctx.author.send("중복 된 닉네임입니다.")
+                return
         else :
             await ctx.author.send("이미 가입이 되어 있습니다.")
+            return
     else : 
         await ctx.author.send("닉네임 제한 4~10, 한글3 영어1")
 
@@ -512,16 +495,19 @@ async def 기부(ctx,nickname2=None,moa=None) :
 async def 상점(ctx,item=None) : 
     con = connectsql(True)
     cur=con.cursor()
-    count,have,end,money,need,amount=0,0,0,0,0,0
+    have,money,need,amount=0,0,0,0
     nickname=""
     name=""
     if item==None : 
-        sql=f"select * from gnkstore"
+        print_string=""
+        sql=f"select * from gnkstore order by itemid"
         cur.execute(sql)
         datas=cur.fetchall()
+        print_string+='```'
         for i in datas : 
-            count=count+1
-            await ctx.send(f"{i[0]}    {i[1]}    {i[2]}모아  남은 개수 : {i[3]}")
+            print_string+=f"{i[0]}    {i[1]}    {i[2]}모아  남은 개수 : {i[3]}\n"
+        print_string+='```'
+        await ctx.send(print_string)
         con.close()
     elif int(item)>=1 : 
         sql=f"select EXISTS (select * from gnkstore where itemid={int(item)}) as success"
@@ -644,22 +630,14 @@ async def 문의(ctx):
 
 @bot.command()
 async def 재발급(ctx) : 
-    salt="R9Wf2PN%qk9!Jn*Sd$PeB10iJ"
-    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore")
+    con=connectsql(True)
     cur=con.cursor()
     t1 = ctx.author.id
-    string_pool=string.ascii_letters+string.digits
-    result1=""
-    for i in range(20) : 
-        result1=result1+random.choice(string_pool)
-    hasing=hashlib.sha512()
-    hasing.digest()
-    result=hashlib.sha512((result1+salt).encode('utf-8')).hexdigest()
-    sql=f"update user_info set login_string='{result}' where discorduserid='{t1}'"
+    result1=makestring()
+    sql=f"update user_info set login_string='{result1}' where discorduserid='{t1}'"
     cur.execute(sql)
-    con.commit()
     con.close()
-    await ctx.author.send(f"재발급 된 로그인 문자열은 {result1}입니다.")
+    await ctx.author.send(f"재발급 된 고유 확인 문자열은 {result1}입니다.")
 
 @bot.command()
 async def 점수(ctx,nick=None) : 
@@ -696,12 +674,9 @@ def get_need(level):
     temp=[0,0,0,0,0,0]
     temp2=0
     for i in range(level):
-        if i<3 :
+        if i<6 :
             temp[i]=1
             temp2=1
-        elif i<6 :
-            temp[i]=2
-            temp2=2
         else :
             temp2=sum(temp)
             temp[0]=temp[1]
@@ -874,7 +849,7 @@ async def 강화(ctx) :
         change=-10
     
     print(change)
-    if change<=0 and level>=14:
+    if change<=0 and level>=10:
         setluckypang(need)
 
     if change!=-10 :
@@ -897,7 +872,7 @@ async def 강화(ctx) :
 def setluckypang(need) :
     con=connectsql(True)
     cur=con.cursor()
-    sql=f"update betstat set pangprice=pangprice+{int(need/10)}"
+    sql=f"update betstat set pangprice=pangprice+{int(need/10*4)}"
     cur.execute(sql)
     con.close()
 
