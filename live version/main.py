@@ -802,7 +802,7 @@ async def 강화(ctx,repeat=None) :
         repeat=1
     else :
         repeat=int(repeat)
-    if repeat<0 or repeat>10 :
+    if repeat>0 or repeat<=10 :
         for i in range(repeat) :  
             level = 1
             cri_success=0.0
