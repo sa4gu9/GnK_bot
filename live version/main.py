@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.3.2"
+version="V1.3.3"
 
 def makestring() :
     result1=""
@@ -137,13 +137,16 @@ async def luckypang():
                 await channel.send(nickname+"님이 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                 await user.send(nickname+"님 축하합니다! 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             sql=f"update betstat set pangprice=0"
-            cur.execute(sql)        
+            cur.execute(sql)
+            con.close()
         elif timenow_str[11:21]=="00:00:00.0" :
             con=connectsql(True)
             cur=con.cursor()
             sql="update gnkstore set amount=100 where itemid=101"
+            sql="update gnkstore set amount=120 where itemid=9"
             cur.execute(sql)
-            await channel.send("상점에 있는 의문의 물건 +1의 개수가 100개가 되었습니다.")
+            await channel.send("상점에 있는 의문의 물건 +1과 강화관련 아이템 랜덤박스의 개수가 100개,120개가 되었습니다.")
+            con.close()
         await asyncio.sleep(0.1)
 
 class Map:
@@ -492,23 +495,30 @@ async def 기부(ctx,nickname2=None,moa=None) :
 
 
 @bot.command()
-async def 상점(ctx,item=None) : 
+async def 상점(ctx) : 
+    con = connectsql(True)
+    cur=con.cursor()
+    print_string=""
+    sql=f"select * from gnkstore order by itemid"
+    cur.execute(sql)
+    datas=cur.fetchall()
+    print_string+='```'
+    for i in datas : 
+        print_string+=f"{i[0]}    {i[1]}    {i[2]}모아  남은 개수 : {i[3]}\n"
+    print_string+='```'
+    await ctx.send(print_string)
+    con.close()
+    
+
+@bot.command()
+async def 구매(ctx,item=None) :
     con = connectsql(True)
     cur=con.cursor()
     have,money,need,amount=0,0,0,0
     nickname=""
     name=""
-    if item==None : 
-        print_string=""
-        sql=f"select * from gnkstore order by itemid"
-        cur.execute(sql)
-        datas=cur.fetchall()
-        print_string+='```'
-        for i in datas : 
-            print_string+=f"{i[0]}    {i[1]}    {i[2]}모아  남은 개수 : {i[3]}\n"
-        print_string+='```'
-        await ctx.send(print_string)
-        con.close()
+    if item==None :
+        await ctx.send("구매할 아이템 번호를 입력해주세요.")
     elif int(item)>=1 : 
         sql=f"select EXISTS (select * from gnkstore where itemid={int(item)}) as success"
         cur.execute(sql)
@@ -546,6 +556,8 @@ async def 상점(ctx,item=None) :
                 cur.execute(sql2)
                 await ctx.send(f"{nickname}님이 {name}을 구입하였습니다!")
                 return
+            elif int(item)==9 :
+                setluckypang(30000,2)
             elif int(item)<100 :
                 sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
                 sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
@@ -555,6 +567,7 @@ async def 상점(ctx,item=None) :
                 return
         else : 
             await ctx.author.send(f"모아가 부족합니다!")
+    
 
 
 @commands.cooldown(1, 2, commands.BucketType.default)
@@ -782,98 +795,133 @@ def get_price(level) :
 
 @commands.cooldown(1, 3, commands.BucketType.default)
 @bot.command()
-async def 강화(ctx) :
+async def 강화(ctx,repeat=None) :
     con=connectsql(True)
     cur=con.cursor()
-    level = 1
-    cri_success=0.0
-    success=0.0
-    not_change=0.0
-    fail=0.0
-    destroy=0.0
-    result=0.0
-    change=0
-
-    sql=f"select moa,unknown_level from user_info where discorduserid={ctx.author.id}"
-    cur.execute(sql)
-    data=cur.fetchone()
-    print(data)
-    moa=int(data[0])
-    level=int(data[1])
-
-    
-    if level == 0 :
-        await ctx.author.send("의문의 물건을 가지고 있지 않습니다.")
-        return
-
-    need=get_need(level)
-    if need>moa :
-        await ctx.author.send(f"{need-moa}모아가 부족합니다.")
-        return
-    if level == 30 :
-        await ctx.author.send("이미 의문의 물건 +30을 가지고 있습니다.")
-        return
-
-    if level !=29 :
-        cri_success=0.05*(30-level)
+    if repeat==None :
+        repeat=1
     else :
-        cri_success=0.0
+        repeat=int(repeat)
+    if repeat<0 or repeat>10 :
+        for i in range(repeat) :  
+            level = 1
+            cri_success=0.0
+            success=0.0
+            not_change=0.0
+            fail=0.0
+            destroy=0.0
+            result=0.0
+            change=0
 
-    if level==1 :
-        destroy=0.0
-    else :
-        destroy=0.73*(level-29)+20
+            sql=f"select moa,unknown_level from user_info where discorduserid={ctx.author.id}"
+            cur.execute(sql)
+            data=cur.fetchone()
+            print(data)
+            moa=int(data[0])
+            level=int(data[1])
 
-    success=100-3.2*level
-    fail=get_fail(level)
+            
+            if level == 0 :
+                await ctx.author.send("의문의 물건을 가지고 있지 않습니다.")
+                return
 
-    not_change=100 - cri_success - success - fail - destroy
+            need=get_need(level)
+            if need>moa :
+                await ctx.author.send(f"{need-moa}모아가 부족합니다.")
+                return
+            if level == 30 :
+                await ctx.author.send("이미 의문의 물건 +30을 가지고 있습니다.")
+                return
 
-    result=random.random()*100
+            if level !=29 :
+                cri_success=0.05*(30-level)
+            else :
+                cri_success=0.0
 
-    print(result)
+            if level==1 :
+                destroy=0.0
+            else :
+                destroy=0.73*(level-29)+20
 
-    if result<cri_success :
-        print(f"{result}  {cri_success}")
-        change=2        
-    elif result<cri_success + success :
-        print(f"{result}  {cri_success+success}")
-        change=1
-    elif result<cri_success+success + not_change :
-        print(f"{result}  {cri_success+success+ not_change}")
-        change=0
-    elif result < cri_success + success + not_change + fail :
-        print(f"{result}  {cri_success+success+ not_change+ fail}")
-        change=-1
-    else :
-        change=-10
-    
-    print(change)
-    if change<=0 and level>=10:
-        setluckypang(need)
+            success=100-3.2*level
+            fail=get_fail(level)
 
-    if change!=-10 :
-        sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{need} where discorduserid={ctx.author.id}"
-        if change>0 :
-            await ctx.send(f"강화 레벨 {level}에서 {change} 상승! 현재 레벨 : {level+change}")
-        elif change<0 :
-            await ctx.send(f"강화 레벨 {level}에서 {-change} 감소! 현재 레벨 : {level+change}")
-        else :
-            await ctx.send(f"강화 레벨 {level}에서 변동 없음! 현재 레벨 : {level}")
-    else :
-        sql=f"update user_info set unknown_level=0,moa=moa-{need} where discorduserid={ctx.author.id}"
-        await ctx.send(f"의문의 물건 +{level} 파괴...")
-        setdestroy(level)
-    
-    cur.execute(sql)
+            not_change=100 - cri_success - success - fail - destroy
+
+            result=random.random()*100
+
+            if result<cri_success :
+                print(f"{result}  {cri_success}")
+                change=2        
+            elif result<cri_success + success :
+                print(f"{result}  {cri_success+success}")
+                change=1
+            elif result<cri_success+success + not_change :
+                print(f"{result}  {cri_success+success+ not_change}")
+                change=0
+            elif result < cri_success + success + not_change + fail :
+                print(f"{result}  {cri_success+success+ not_change+ fail}")
+                change=-1
+            else :
+                change=-10
+            
+            if change<=0 and level>=10:
+                setluckypang(need,1)
+
+
+            if change!=-10 :
+                sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{need} where discorduserid={ctx.author.id}"
+                if change>0 :
+                    await ctx.send(f"강화 레벨 {level}에서 {change} 상승! 현재 레벨 : {level+change}")
+                elif change<0 :
+                    await ctx.send(f"강화 레벨 {level}에서 {-change} 감소! 현재 레벨 : {level+change}")
+                else :
+                    await ctx.send(f"강화 레벨 {level}에서 변동 없음! 현재 레벨 : {level}")
+            else :
+                print_string=""
+                sql=f"update user_info set unknown_level=0,moa=moa-{need} where discorduserid={ctx.author.id}"
+                cur.execute(sql)
+                if level>=20 :
+                    lucky=random.randrange(0,100)
+                    if lucky<17 :
+                        getmoa=int(need*0.9)
+                    elif lucky<37 :
+                        getmoa=int(need)
+                    elif lucky<52 :
+                        getmoa=int(need*1.2)
+                    elif lucky<63 :
+                        getmoa=int(need*1.4)
+                    elif lucky<72 :
+                        getmoa=int(need*1.6)
+                    elif lucky<80 :
+                        getmoa=int(need*1.8)
+                    elif lucky<87 :
+                        getmoa=int(need*1.9)
+                    elif lucky<92 :
+                        getmoa=int(need*2)
+                    elif lucky<97 :
+                        getmoa=int(need*2.1)
+                    else :
+                        getmoa=int(need*2.2)
+                    sql=f"update user_info set moa=moa+{getmoa} where discorduserid={ctx.author.id}"
+                    cur.execute(sql)
+                    print_string=f"의문의 물건 +{level} 파괴... {getmoa}지급"
+                else :
+                    print_string=f"의문의 물건 +{level} 파괴..."
+                await ctx.send(print_string)
+                setdestroy(level)
     con.close()
 
 
-def setluckypang(need) :
+def setluckypang(need,mode) :
     con=connectsql(True)
     cur=con.cursor()
-    sql=f"update betstat set pangprice=pangprice+{int(need/10*4)}"
-    cur.execute(sql)
+    if mode==1 :
+        sql=f"update betstat set pangprice=pangprice+{int(need/10*4)}"
+        cur.execute(sql)
+    if mode==2 :
+        sql=f"update betstat set pangprice=pangprice+{need}"
+        cur.execute(sql)
     con.close()
 
 def setdestroy(level) :
