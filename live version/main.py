@@ -871,6 +871,7 @@ async def 강화(ctx,repeat=None) :
 
             if change!=-10 :
                 sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{need} where discorduserid={ctx.author.id}"
+                cur.execute(sql)
                 if change>0 :
                     await ctx.send(f"강화 레벨 {level}에서 {change} 상승! 현재 레벨 : {level+change}")
                 elif change<0 :
