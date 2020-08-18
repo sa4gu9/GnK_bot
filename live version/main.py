@@ -984,7 +984,7 @@ async def 개봉(ctx) :
     cur.execute(sql)
     data=cur.fetchone()
     if int(data[0])==0 :
-        ctx.author.id("강화관련 아이템 랜덤박스를 가지고 있지 않습니다.")
+        await ctx.author.id("강화관련 아이템 랜덤박스를 가지고 있지 않습니다.")
         return
 
     lucky_m=random.randrange(0,100)
