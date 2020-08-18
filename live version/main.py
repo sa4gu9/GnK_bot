@@ -980,6 +980,13 @@ async def 순위(ctx) :
 async def 개봉(ctx) :
     con=connectsql(True)
     cur=con.cursor()
+    sql="select item9 where discorduserid={ctx.author.id}"
+    cur.execute(sql)
+    data=cur.fetchone()
+    if int(data[0])==0 :
+        ctx.author.id("강화관련 아이템 랜덤박스를 가지고 있지 않습니다.")
+        return
+
     lucky_m=random.randrange(0,100)
     item_no=0
     item_name=""
@@ -1009,7 +1016,7 @@ async def 개봉(ctx) :
     else :
         await ctx.author.send(f"'{item_name}'획득!")
     
-    sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1"
+    sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1 where discorduserid={ctx.author.id}"
     cur.execute(sql)
     
     con.close()
