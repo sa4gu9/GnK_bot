@@ -980,7 +980,7 @@ async def 순위(ctx) :
 async def 개봉(ctx) :
     con=connectsql(True)
     cur=con.cursor()
-    sql=f"select item9 where discorduserid={ctx.author.id}"
+    sql=f"select item9 from user_info where discorduserid={ctx.author.id}"
     cur.execute(sql)
     data=cur.fetchone()
     if int(data[0])==0 :
