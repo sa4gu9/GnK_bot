@@ -1005,9 +1005,9 @@ async def 개봉(ctx) :
         item_no=""
     
     if item_no==0 :
-        ctx.author.send("꽝")
+        await ctx.author.send("꽝...")
     else :
-        ctx.author.send(f"'{item_name}'획득!")
+        await ctx.author.send(f"'{item_name}'획득!")
     
     sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1"
     cur.execute(sql)
