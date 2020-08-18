@@ -1015,8 +1015,10 @@ async def 개봉(ctx) :
         await ctx.author.send("꽝...")
     else :
         await ctx.author.send(f"'{item_name}'획득!")
-    
-    sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1 where discorduserid={ctx.author.id}"
+        sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1 where discorduserid={ctx.author.id}"
+        cur.execute(sql)
+
+    sql=f"update user_info set item9=item9-1 where discorduserid={ctx.author.id}"
     cur.execute(sql)
     
     con.close()
