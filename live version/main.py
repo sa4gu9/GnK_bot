@@ -1002,7 +1002,7 @@ async def 개봉(ctx) :
         item_no=6
         item_name="파괴 확률 절반"
     else :
-        item_no=""
+        item_no=0
     
     if item_no==0 :
         await ctx.author.send("꽝...")
