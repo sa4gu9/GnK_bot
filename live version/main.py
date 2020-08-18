@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.3.3"
+version="V1.3.4"
 
 def makestring() :
     result1=""
@@ -115,25 +115,26 @@ async def luckypang():
             cur.execute(sql)
             data=cur.fetchone()
             luckym=int(data[0])
-            sql="select nickname,moa,discorduserid from user_info order by rand() limit 1"
+            sql="select nickname,discorduserid from user_info order by rand() limit 1"
             cur.execute(sql)
             data=cur.fetchone()
             nickname=data[0]
-            money=int(data[1])
-            discorduser=int(data[2])
+            discorduser=int(data[1])
             sql=f"update user_info set moa=moa+{luckym} where discorduserid={discorduser}"            
             cur.execute(sql)
             user=bot.get_user(int(discorduser))
             await channel.send(nickname+"님이 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             await user.send(nickname+"님 축하합니다! 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             if bonus_luckypang<5 :
-                sql=f"select nickname,moa,discorduserid from user_info where nickname not in('{nickname}') order by rand() limit 1"
+                sql=f"select nickname,discorduserid from user_info where nickname not in('{nickname}') order by rand() limit 1"
+                cur.execute(sql)
+                data=cur.fetchone()
                 nickname=data[0]
-                money=int(data[1]/10)
-                discorduser=int(data[2])
+                discorduser=int(data[1])
+                luckym=int(luckym/10)
                 sql=f"update user_info set moa=moa+{int(luckym)} where discorduserid={discorduser}"
                 cur.execute(sql)
-                user=bot.get_user(int(discorduser))
+                user=bot.get_user(discorduser)
                 await channel.send(nickname+"님이 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
                 await user.send(nickname+"님 축하합니다! 보너스 럭키팡에 당첨되어 "+str(luckym)+"모아를 받았습니다!")
             sql=f"update betstat set pangprice=0"
@@ -143,6 +144,7 @@ async def luckypang():
             con=connectsql(True)
             cur=con.cursor()
             sql="update gnkstore set amount=100 where itemid=101"
+            cur.execute(sql)
             sql="update gnkstore set amount=120 where itemid=9"
             cur.execute(sql)
             await channel.send("상점에 있는 의문의 물건 +1과 강화관련 아이템 랜덤박스의 개수가 100개,120개가 되었습니다.")
@@ -911,6 +913,7 @@ async def 강화(ctx,repeat=None) :
                     print_string=f"의문의 물건 +{level} 파괴..."
                 await ctx.send(print_string)
                 setdestroy(level)
+                return
     con.close()
 
 
@@ -973,7 +976,46 @@ async def 순위(ctx) :
     datalist+='```'
     await ctx.send(datalist)
 
+@bot.command()
+async def 개봉(ctx) :
+    con=connectsql(True)
+    cur=con.cursor()
+    lucky_m=random.randrange(0,100)
+    item_no=0
+    item_name=""
+    if lucky_m<6 :
+        item_no=1
+        item_name="파괴 방지"
+    elif lucky_m<11 :
+        item_no=2
+        item_name="강화 비용 절반"
+    elif lucky_m<18 :
+        item_no=3
+        item_name="크리티컬 확률 5배"
+    elif lucky_m<21 :
+        item_no=4
+        item_name="4렙업"
+    elif lucky_m<27 :
+        item_no=5
+        item_name="상승 또는 파괴"
+    elif lucky_m<34 :
+        item_no=6
+        item_name="파괴 확률 절반"
+    else :
+        item_no=""
+    
+    if item_no==0 :
+        ctx.author.send("꽝")
+    else :
+        ctx.author.send(f"'{item_name}'획득!")
+    
+    sql=f"update user_info set upgrade_item{item_no}=upgrade_item{item_no}+1"
+    cur.execute(sql)
+    
+    con.close()
+        
 
+    
 
 
 bot.run(token)
