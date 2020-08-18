@@ -558,9 +558,9 @@ async def 구매(ctx,item=None) :
                 cur.execute(sql2)
                 await ctx.send(f"{nickname}님이 {name}을 구입하였습니다!")
                 return
-            elif int(item)==9 :
-                setluckypang(30000,2)
             elif int(item)<100 :
+                if int(item)==9 :
+                    setluckypang(30000,2)
                 sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
                 sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
                 cur.execute(sql)
