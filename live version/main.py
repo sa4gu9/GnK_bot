@@ -166,39 +166,29 @@ class Map:
         for i in self.veryhard:
             self.mapall.append(i)
 
+
     def getAllMap(self):
         return self.mapall
 
     def get_data(self,mode,amount) :
-        self.mode=mode
-        self.amount=amount
-        if self.mode==1 : 
-            data= random.sample(self.normal,self.amount)
-        elif self.mode==2 : 
-            data= random.sample(self.hard,self.amount)
-        elif self.mode==3 : 
-            data= random.sample(self.veryhard,self.amount)
-        elif self.mode==4 :
-            data= random.sample(self.mapall,self.amount)
-        elif self.mode==5 : 
-            data=random.sample(self.mapitem,self.amount)
+        if mode==1 : 
+            data= random.sample(self.normal,amount)
+        elif mode==2 : 
+            data= random.sample(self.hard,amount)
+        elif mode==3 : 
+            data= random.sample(self.veryhard,amount)
+        elif mode==4 :
+            data= random.sample(self.mapall,amount)
+        elif mode==5 : 
+            data=random.sample(self.mapitem,amount)
         else :
             data="1:노멀 2:하드 3:베리하드 4:전체(1~3) 5:아이템"
         return data
 
     def getmap(self,mode,amount=5) : 
-        self.mode=list(mode)[0]
-        self.amount=list(amount)[0]
-        data=None
-        printing=""
-        data=self.get_data(self.mode,self.amount)
-        print(type(data))
-        if type(data) is list :
-            for i in data : 
-                printing+=(i+'\n')
-            return f"```{printing}```"
-        else :
-            return data
+        data=[]
+        data=self.get_data(mode,amount)
+        return data
 
 maps=Map(mapnormal,maphard,mapveryhard,mapitem)
 
@@ -884,7 +874,7 @@ async def 강화(ctx,repeat=None) :
                 print_string=""
                 sql=f"update user_info set unknown_level=0,moa=moa-{need} where discorduserid={ctx.author.id}"
                 cur.execute(sql)
-                if level>=20 :
+                if level>=10 :
                     lucky=random.randrange(0,100)
                     if lucky<17 :
                         getmoa=int(need*0.9)
@@ -921,7 +911,7 @@ def setluckypang(need,mode) :
     con=connectsql(True)
     cur=con.cursor()
     if mode==1 :
-        sql=f"update betstat set pangprice=pangprice+{int(need/10*4)}"
+        sql=f"update betstat set pangprice=pangprice+{int(need/10*6)}"
         cur.execute(sql)
     if mode==2 :
         sql=f"update betstat set pangprice=pangprice+{need}"
