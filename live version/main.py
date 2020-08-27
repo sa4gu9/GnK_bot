@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.3.4"
+version="V1.3.6"
 
 def makestring() :
     result1=""
@@ -298,18 +298,22 @@ def get_chance_multiple(mode) :
     if mode==1 : 
         chance=80
         multiple=1.2
-    if mode==2 : 
+    elif mode==2 : 
         chance=64
         multiple=1.6
-    if mode==3 : 
+    elif mode==3 : 
         chance=48
         multiple=2.2
-    if mode==4 : 
+    elif mode==4 : 
         chance=32
         multiple=3
-    if mode==5 : 
+    elif mode==5 : 
         chance=16
-        multiple=4       
+        multiple=4
+    elif mode==6 :
+        chance=85
+        multiple=1.13
+           
     return chance,multiple
 
 def get_stats1(stat,money,moa) :
@@ -334,15 +338,15 @@ def get_stats1(stat,money,moa) :
 
 @commands.cooldown(1, 10, commands.BucketType.user)
 @bot.command()
-async def 베팅(ctx,moa=None,mode=None,repeat=None) :
+async def 베팅(ctx,mode=None,moa=None,repeat=None) :
+    con = connectsql(True)
+    cur=con.cursor()
     if repeat==None : 
         repeat=1
     if int(repeat)<=10 and int(repeat)>0 : 
         total_profit,start=0,0
         stats=[]
         for num in range(int(repeat)) : 
-            con = connectsql(True)
-            cur=con.cursor()
             sql=f"select * from betstat"
             cur.execute(sql)
             datas=cur.fetchall()
@@ -362,50 +366,62 @@ async def 베팅(ctx,moa=None,mode=None,repeat=None) :
                     money=i[1]
                     if num==0 : 
                         start=i[1]
-                if money<int(moa) or int(moa)<0 : 
-                    await ctx.author.send(nick+"님 보유량보다 많거나 0원 미만으로 베팅하실 수 없습니다.")
-                    return
-                elif moa==None : 
-                    await ctx.author.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배)")
-                    return
-                else :
-                    lose=int(moa)
-                    chance,multiple=get_chance_multiple(int(mode))      
-                if int(mode)<6 and int(mode)>0 : 
-                    result=random.randrange(0,100)
-                    if result<chance : 
-                        profit=math.floor(multiple*int(moa))
-                        end=money-lose+profit
-                        total_profit=total_profit-lose+profit
-                        sql=f"update user_info set moa={end} where discorduserid='{t1}'"
-                        sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'success')"
-                        cur.execute(sql)
-                        cur.execute(sql3)                   
+                if mode!=None :
+                    if int(mode)==6 and moa!=None :
+                        await ctx.author.send("모드 6은 가지고 있는 모든 모아를 걸어야 하므로 모아를 입력할 수 없습니다.")
+                        return
+                    elif int(mode)==6 and moa==None :
+                        moa=money
+                        lose=money
+                        chance,multiple=get_chance_multiple(int(mode))
+                    elif money<int(moa) or int(moa)<0  : 
+                        await ctx.author.send(nick+"님 보유량보다 많거나 0원 미만으로 베팅하실 수 없습니다.")
+                        return
+                    elif moa==None : 
+                        await ctx.author.send("GnK베팅 거실돈 모드\n(모드 종류 : 1 80% 1.4배, 2 64% 1.8배, 3 48% 2.2배, 4 32% 2.6배, 5 16% 3배, 6 1.13배 85% 전재산을 걸어야함)")
+                        return
                     else :
-                        total_profit=total_profit-lose
-                        end=money-lose
-                        stats[0]=int(stats[0])+1
-                        stats[1]=get_stats1(int(stats[1]),money,int(moa))
-                        sql2=f"update user_info set moa={end} where discorduserid='{t1}'"
-                        sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
-                        sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'fail')"
+                        lose=int(moa)
+                        chance,multiple=get_chance_multiple(int(mode))      
+                    if int(mode)<7 and int(mode)>0 : 
+                        result=random.randrange(0,100)
+                        print(f"{result}   {chance}")
+                        if result<chance : 
+                            profit=math.floor(multiple*int(moa))
+                            end=money-lose+profit
+                            total_profit=total_profit-lose+profit
+                            sql=f"update user_info set moa={end} where discorduserid='{t1}'"
+                            sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'success')"
+                            cur.execute(sql)
+                            cur.execute(sql3)                   
+                        else :
+                            total_profit=total_profit-lose
+                            end=money-lose
+                            stats[0]=int(stats[0])+1
+                            stats[1]=get_stats1(int(stats[1]),money,int(moa))
+                            sql2=f"update user_info set moa={end} where discorduserid='{t1}'"
+                            sql=f"update betstat set betcount=betcount+1, pangprice='{stats[1]}'"
+                            sql3=f"insert into userbetstat (nickname,moa,mode,result) values ('{nick}',{int(moa)},{int(mode)},'fail')"
+                            cur.execute(sql)
+                            cur.execute(sql2)
+                            cur.execute(sql3)
+                            if stats[0]<=700 : 
+                                await ctx.send(str(stats[0])+"번째 실패")
+                            else : 
+                                await ctx.send("700회를 넘겨서 실패 횟수를 알려주지 않습니다.")
+                        if stats[0]>=1000 : 
+                            stats[0]=0
+                            sql=f"update user_info set moa=moa+100000 where discorduserid='{t1}'"
+                            cur.execute(sql)
+                            await ctx.send(f"총 1000번째로 실패하여 {nick}님이 100000모아를 받았습니다! 다시 0회부터 시작합니다.")
+                        sql=f"update betstat set betcount={stats[0]}, pangprice={stats[1]}"
                         cur.execute(sql)
-                        cur.execute(sql2)
-                        cur.execute(sql3)
-                        if stats[0]<=700 : 
-                            await ctx.send(str(stats[0])+"번째 실패")
-                        else : 
-                            await ctx.send("700회를 넘겨서 실패 횟수를 알려주지 않습니다.")
-                    if stats[0]>=1000 : 
-                        stats[0]=0
-                        sql=f"update user_info set moa=moa+100000 where discorduserid='{t1}'"
-                        cur.execute(sql)
-                        await ctx.send(f"총 1000번째로 실패하여 {nick}님이 100000모아를 받았습니다! 다시 0회부터 시작합니다.")
-                    sql=f"update betstat set betcount={stats[0]}, pangprice={stats[1]}"
-                    cur.execute(sql)
+                    else : 
+                        await ctx.author.send("모드를 선택해주세요. 1 80% 1.2배, 2 64% 1.6배, 3 48% 2.2배, 4 32% 3배, 5 16% 4배,6 1.13배 85% 전재산을 걸어야함")
+                        return
                 else : 
-                    await ctx.author.send("모드를 선택해주세요. 1 80% 1.2배, 2 64% 1.6배, 3 48% 2.2배, 4 32% 3배, 5 16% 4배")
-                    break
+                    await ctx.author.send("모드를 선택해주세요. 1 80% 1.2배, 2 64% 1.6배, 3 48% 2.2배, 4 32% 3배, 5 16% 4배,6 1.13배 85% 전재산을 걸어야함")
+                    return
             else : 
                 ctx.author.send("구걸 상태라 베팅을 할 수 없습니다.")
                 break
@@ -787,7 +803,7 @@ def get_price(level) :
 
 @commands.cooldown(1, 3, commands.BucketType.default)
 @bot.command()
-async def 강화(ctx,repeat=None) :
+async def 강화(ctx,repeat=None,item=None) :
     con=connectsql(True)
     cur=con.cursor()
     if repeat==None :
@@ -797,18 +813,11 @@ async def 강화(ctx,repeat=None) :
     if repeat>0 or repeat<=10 :
         for i in range(repeat) :  
             level = 1
-            cri_success=0.0
-            success=0.0
-            not_change=0.0
-            fail=0.0
-            destroy=0.0
-            result=0.0
-            change=0
+            cri_success,success,not_change,fail,destroy,result,change=0.0,0.0,0.0,0.0,0.0,0.0,0
 
             sql=f"select moa,unknown_level from user_info where discorduserid={ctx.author.id}"
             cur.execute(sql)
             data=cur.fetchone()
-            print(data)
             moa=int(data[0])
             level=int(data[1])
 
@@ -818,26 +827,43 @@ async def 강화(ctx,repeat=None) :
                 return
 
             need=get_need(level)
-            if need>moa :
-                await ctx.author.send(f"{need-moa}모아가 부족합니다.")
+            realneed=0
+            if item!=None :
+                if int(item)==2 and repeat==1 :
+                    print(type(item))
+                    print(type(repeat))
+                    if level>=21 and level<=28 :
+                        sql=f"select upgrade_item2 from user_info where discorduserid={ctx.author.id}"
+                        cur.execute(sql)
+                        data=cur.fetchone()
+                        print(data)
+                        if int(data[0])>0 :
+                            realneed=int(realneed/2)
+                        else :
+                            await ctx.author.send("'강화 비용 절반'아이템을 가지고 있지 않습니다.")
+                            return
+                    else :
+                        await ctx.author.send("21~28렙에서만 '강화 비용 절반'을 사용할 수 있습니다.")
+                        return
+                else :
+                    await ctx.author.send("현재 아이템 2번만 사용 가능합니다.(강화 비용 절반, 반복 1회일때만 사용 가능)")
+                    return
+            else :
+                realneed=need
+            print(realneed)
+                
+            
+            if realneed>moa :
+                await ctx.author.send(f"{realneed-moa}모아가 부족합니다.")
                 return
             if level == 30 :
                 await ctx.author.send("이미 의문의 물건 +30을 가지고 있습니다.")
                 return
-
-            if level !=29 :
-                cri_success=0.05*(30-level)
-            else :
-                cri_success=0.0
-
-            if level==1 :
-                destroy=0.0
-            else :
-                destroy=0.73*(level-29)+20
-
+            
+            cri_success=Set_cri_success(level)
+            destroy=Set_destroy(level)
             success=100-3.2*level
             fail=get_fail(level)
-
             not_change=100 - cri_success - success - fail - destroy
 
             result=random.random()*100
@@ -862,7 +888,7 @@ async def 강화(ctx,repeat=None) :
 
 
             if change!=-10 :
-                sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{need} where discorduserid={ctx.author.id}"
+                sql=f"update user_info set unknown_level=unknown_level+{change},moa=moa-{realneed} where discorduserid={ctx.author.id}"
                 cur.execute(sql)
                 if change>0 :
                     await ctx.send(f"강화 레벨 {level}에서 {change} 상승! 현재 레벨 : {level+change}")
@@ -872,39 +898,57 @@ async def 강화(ctx,repeat=None) :
                     await ctx.send(f"강화 레벨 {level}에서 변동 없음! 현재 레벨 : {level}")
             else :
                 print_string=""
-                sql=f"update user_info set unknown_level=0,moa=moa-{need} where discorduserid={ctx.author.id}"
+                sql=f"update user_info set unknown_level=0,moa=moa-{realneed} where discorduserid={ctx.author.id}"
                 cur.execute(sql)
-                if level>=10 :
-                    lucky=random.randrange(0,100)
-                    if lucky<17 :
-                        getmoa=int(need*0.9)
-                    elif lucky<37 :
-                        getmoa=int(need)
-                    elif lucky<52 :
-                        getmoa=int(need*1.2)
-                    elif lucky<63 :
-                        getmoa=int(need*1.4)
-                    elif lucky<72 :
-                        getmoa=int(need*1.6)
-                    elif lucky<80 :
-                        getmoa=int(need*1.8)
-                    elif lucky<87 :
-                        getmoa=int(need*1.9)
-                    elif lucky<92 :
-                        getmoa=int(need*2)
-                    elif lucky<97 :
-                        getmoa=int(need*2.1)
-                    else :
-                        getmoa=int(need*2.2)
+                if level>=10 :                   
+                    getmoa=Get_getmoa(need)
                     sql=f"update user_info set moa=moa+{getmoa} where discorduserid={ctx.author.id}"
                     cur.execute(sql)
                     print_string=f"의문의 물건 +{level} 파괴... {getmoa}지급"
                 else :
                     print_string=f"의문의 물건 +{level} 파괴..."
                 await ctx.send(print_string)
-                setdestroy(level)
+                setdestroydata(level)
                 return
     con.close()
+
+def Get_getmoa(need) :
+    lucky=random.randrange(0,100)
+    getmoa=0
+    if lucky<17 :
+        getmoa=int(need*1.2)
+    elif lucky<37 :
+        getmoa=int(need*1.3)
+    elif lucky<52 :
+        getmoa=int(need*1.5)
+    elif lucky<63 :
+        getmoa=int(need*1.7)
+    elif lucky<72 :
+        getmoa=int(need*1.9)
+    elif lucky<80 :
+        getmoa=int(need*2.1)
+    elif lucky<87 :
+        getmoa=int(need*2.2)
+    elif lucky<92 :
+        getmoa=int(need*2.3)
+    elif lucky<97 :
+        getmoa=int(need*2.4)
+    else :
+        getmoa=int(need*2.5)
+    return getmoa
+    
+
+def Set_cri_success(level) :
+    if level !=29 :
+        return 0.05*(30-level)
+    else :
+        return 0.0
+
+def Set_destroy(level) :
+    if level==1 :
+        return 0.0
+    else :
+        return 0.73*(level-29)+20
 
 
 def setluckypang(need,mode) :
@@ -918,7 +962,7 @@ def setluckypang(need,mode) :
         cur.execute(sql)
     con.close()
 
-def setdestroy(level) :
+def setdestroydata(level) :
     con=connectsql(True)
     cur=con.cursor()
     sql=f"update destroy_table set destroy=destroy+1 where level={level}"
@@ -1017,4 +1061,4 @@ async def 개봉(ctx) :
     
 
 
-bot.run(token)
+bot.run(test_token)
