@@ -22,7 +22,7 @@ import schedule
 
 #region setting
 
-version="V1.3.6"
+version="V1.3.7"
 
 def makestring() :
     result1=""
@@ -149,7 +149,7 @@ async def luckypang():
             cur.execute(sql)
             await channel.send("상점에 있는 의문의 물건 +1과 강화관련 아이템 랜덤박스의 개수가 100개,120개가 되었습니다.")
             con.close()
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.08)
 
 class Map:
     def __init__(self,mapnormal,maphard,mapveryhard,mapitem):
@@ -565,10 +565,23 @@ async def 구매(ctx,item=None) :
                 await ctx.send(f"{nickname}님이 {name}을 구입하였습니다!")
                 return
             elif int(item)<100 :
-                if int(item)==9 :
+                if int(item)==5 :
+                    sql=f"update user_info set item5 = item5+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
+                    sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
                     setluckypang(30000,2)
-                sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
-                sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
+                elif int(item)>=2 and int(item)<=4 :
+                    ticketcount=0
+                    if int(item)==2 :
+                        ticketcount=1
+                    elif int(item)==2 :
+                        ticketcount=3
+                    elif int(item)==2 :
+                        ticketcount=6
+                    sql=f"update user_info set item2 = item2+{ticketcount}, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
+                    sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
+                else :
+                    sql=f"update user_info set item{int(item)} = item{int(item)}+1, moa=moa-{int(need)} where discorduserid={ctx.author.id}"
+                    sql2=f"update gnkstore set amount=amount-1 where itemid='{int(item)}'"
                 cur.execute(sql)
                 cur.execute(sql2)
                 await ctx.send(f"{nickname}님이 {name}을 구입하였습니다! 현재 {nickname}님의 보유 개수는 {have+1}개 입니다.")
@@ -806,6 +819,8 @@ def get_price(level) :
 async def 강화(ctx,repeat=None,item=None) :
     con=connectsql(True)
     cur=con.cursor()
+    itemname=""
+    level4up=False
     if repeat==None :
         repeat=1
     else :
@@ -827,31 +842,60 @@ async def 강화(ctx,repeat=None,item=None) :
                 return
 
             need=get_need(level)
+
+            cri_success=Set_cri_success(level)
+            destroy=Set_destroy(level)
+            success=100-3.2*level
+            fail=get_fail(level)
+            not_change=100 - cri_success - success - fail - destroy
+
             realneed=0
             if item!=None :
-                if int(item)==2 and repeat==1 :
-                    print(type(item))
-                    print(type(repeat))
-                    if level>=21 and level<=28 :
-                        sql=f"select upgrade_item2 from user_info where discorduserid={ctx.author.id}"
+                if (int(item)==2 or int(item)==1) and repeat==1 :
+                    if int(item)==1 :
+                        itemname="파괴 방지"
+                    elif int(item)==2 :
+                        itemname="강화 비용 절반"
+                    if level>=15 and level<=28 :
+                        sql=f"select upgrade_item{item} from user_info where discorduserid={ctx.author.id}"
+                        cur.execute(sql)
+                        data=cur.fetchone()
+                        if int(data[0])>0 :
+                            if int(item)==1 :
+                                not_change+=destroy
+                                destroy=0
+                            elif int(item)==2 :
+                                realneed=int(realneed/2)
+                            sql=f"update user_info set upgrade_item{item}=upgrade_item{item}-1 where discorduserid={ctx.author.id}"
+                            cur.execute(sql)
+                        else :
+                            await ctx.author.send(f"'{itemname}'아이템을 가지고 있지 않습니다.")
+                            return
+                    else :
+                        await ctx.author.send(f"15~28렙에서만 '{itemname}'을 사용할 수 있습니다.")
+                        return
+                elif int(item)==4 and repeat==1 :
+                    itemname="4렙업"
+                    if level>=15 and level<=23 :
+                        sql=f"select upgrade_item{item} from user_info where discorduserid={ctx.author.id}"
                         cur.execute(sql)
                         data=cur.fetchone()
                         print(data)
                         if int(data[0])>0 :
-                            realneed=int(realneed/2)
+                            level4up=True
+                            sql=f"update user_info set upgrade_item{item}=upgrade_item{item}-1 where discorduserid={ctx.author.id}"
+                            cur.execute(sql)
                         else :
-                            await ctx.author.send("'강화 비용 절반'아이템을 가지고 있지 않습니다.")
+                            await ctx.author.send(f"'{itemname}'아이템을 가지고 있지 않습니다.")
                             return
                     else :
-                        await ctx.author.send("21~28렙에서만 '강화 비용 절반'을 사용할 수 있습니다.")
+                        await ctx.author.send(f"15~23렙에서만 '{itemname}'을 사용할 수 있습니다.")
                         return
                 else :
-                    await ctx.author.send("현재 아이템 2번만 사용 가능합니다.(강화 비용 절반, 반복 1회일때만 사용 가능)")
+                    await ctx.author.send("현재 아이템 1,2,4번만 사용 가능합니다.(파괴 방지, 강화 비용 절반,4렙 업, 반복 1회일때만 사용 가능)")
                     return
             else :
-                realneed=need
-            print(realneed)
-                
+                realneed=need                
             
             if realneed>moa :
                 await ctx.author.send(f"{realneed-moa}모아가 부족합니다.")
@@ -860,17 +904,13 @@ async def 강화(ctx,repeat=None,item=None) :
                 await ctx.author.send("이미 의문의 물건 +30을 가지고 있습니다.")
                 return
             
-            cri_success=Set_cri_success(level)
-            destroy=Set_destroy(level)
-            success=100-3.2*level
-            fail=get_fail(level)
-            not_change=100 - cri_success - success - fail - destroy
+
 
             result=random.random()*100
 
             if result<cri_success :
                 print(f"{result}  {cri_success}")
-                change=2        
+                change=2
             elif result<cri_success + success :
                 print(f"{result}  {cri_success+success}")
                 change=1
@@ -882,6 +922,11 @@ async def 강화(ctx,repeat=None,item=None) :
                 change=-1
             else :
                 change=-10
+
+            if change==1 and level4up :
+                change=4
+            elif change==2 and level4up :
+                change=6
             
             if change<=0 and level>=10:
                 setluckypang(need,1)
@@ -987,7 +1032,8 @@ async def 통계(ctx) :
     datas= cur.fetchall()
     showlist+="```레벨별 파괴횟수\n"
     for data in datas :
-        showlist+=f"{data[0]}   {data[1]}\n"
+        if data[1]!=0 :
+            showlist+=f"{data[0]}   {data[1]}\n"
     showlist+='```'
     await ctx.send(showlist)
 
@@ -1056,9 +1102,14 @@ async def 개봉(ctx) :
     cur.execute(sql)
     
     con.close()
+
+# @bot.command()
+# async def 보유(ctx) :
+#     con=connectsql(False)
+#     cur=con.cursor()
+#     sql=f"select "
         
 
-    
 
 
-bot.run(test_token)
+bot.run(token)
