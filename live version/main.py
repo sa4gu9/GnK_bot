@@ -242,7 +242,7 @@ async def 새벽(ctx): await ctx.send("에도 켜져있음")
 @bot.command()
 async def 가입(ctx,nickname=None) : 
     nicknames=[]
-    con=pymysql.connect(host="35.202.81.62",user="root",password="fbmkkrvKHwkz4L5c",database="gnkscore",autocommit=True)
+    con=connectsql(True)
     cur=con.cursor()
     if len(nickname)>3 and len(nickname)<11 : 
         sql=f"select EXISTS (select * from user_info where discorduserid={ctx.author.id})"
@@ -256,6 +256,9 @@ async def 가입(ctx,nickname=None) :
                 result1=makestring()
                 sql="insert into user_info (nickname,discorduserid,login_string) values (%s,%s,%s)"
                 val=(str(nickname),ctx.author.id,result1)
+                cur.execute(sql,val)
+                sql="insert into item_money_have (nickname,discorduserid) values (%s,%s)"
+                val=(str(nickname),ctx.author.id)
                 cur.execute(sql,val)
                 await ctx.author.send(f"가입에 성공했습니다. 고유 확인 문자열은 {result1}입니다.")
                 return
@@ -864,6 +867,7 @@ async def 강화(ctx,repeat=None,item=None) :
                             if int(item)==1 :
                                 not_change+=destroy
                                 destroy=0
+                                realneed=need
                             elif int(item)==2 :
                                 realneed=int(realneed/2)
                             sql=f"update user_info set upgrade_item{item}=upgrade_item{item}-1 where discorduserid={ctx.author.id}"
@@ -876,6 +880,7 @@ async def 강화(ctx,repeat=None,item=None) :
                         return
                 elif int(item)==4 and repeat==1 :
                     itemname="4렙업"
+                    realneed=need
                     if level>=15 and level<=23 :
                         sql=f"select upgrade_item{item} from user_info where discorduserid={ctx.author.id}"
                         cur.execute(sql)
@@ -1073,7 +1078,7 @@ async def 개봉(ctx) :
     if lucky_m<6 :
         item_no=1
         item_name="파괴 방지"
-    elif lucky_m<11 :
+    elif lucky_m<11 :   
         item_no=2
         item_name="강화 비용 절반"
     elif lucky_m<18 :
@@ -1107,7 +1112,7 @@ async def 개봉(ctx) :
 # async def 보유(ctx) :
 #     con=connectsql(False)
 #     cur=con.cursor()
-#     sql=f"select "
+#     sql=f"select * from item_moa_have where discorduserid={ctx.author.id}"
         
 
 
