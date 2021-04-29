@@ -4,7 +4,7 @@ from discord.ext import commands,tasks
 from discord.utils import get
 
 bot=commands.Bot(command_prefix='GnK')
-token='NzQyMzc1OTUzNTA5OTA4NTcw.XzFNew.xb1Jw4IK5LJcquxjwIvmO5hJEok'
+token='gnktest12345'
 version='V1.0.0'
 
 @bot.event
