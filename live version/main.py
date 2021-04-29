@@ -40,8 +40,8 @@ def connectsql(commit) :
     return pymysql.connect(host=myhost,user=myuser,password=mypsw,database=mydb,autocommit=mycommit)
 
 bot = commands.Bot(command_prefix='GnK')
-token = "NjYxMTc5OTgzNzAzNTcyNDkx.Xp5u9Q.ciODDc8YvlAfXS8CjW4ni6lyaHQ"
-test_token="NzE1NDUwNzA4NTIyMTcyNTI3.Xs9ZZQ.sznKUWaeJ8fPTytNKM-g6LJuEXc"
+token = "main12345"
+test_token="test12345"
 
 mapnormal = 'WKC 코리아 서킷,쥐라기 공룡 무덤,브로디 비밀의 연구소,월드 뉴욕 대질주,쥐라기 공룡 결투장,월드 두바이 다운타운,사막 놀라운 공룡 유적지,신화 신들의 세계,비치 해변 드라이브,빌리지 고가의 질주,WKC 싱가폴 마리나 서킷,WKC 상해 서킷,월드 리오 다운힐,빌리지 익스트림 경기장,빌리지 남산,어비스 운명의 갈림길'
 
