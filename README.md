@@ -6,8 +6,7 @@
 
 ## 사용 언어,프로그램 및 기술
 
-<img src="python.png">
-<img src="vscode.jpg">
+python, visual studio code
 
 카트 맵 추첨을 위한 봇
 
