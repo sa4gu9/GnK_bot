@@ -10,9 +10,6 @@ python, visual studio code
 
 카트 맵 추첨을 위한 봇
 
-<img src="gnkbot/gnkbot.png">
-<img src="gnkbot/gnkbot2.png">
-
 [깃허브 링크](https://github.com/sn49/GnK_bot)
 
 ## 느낀점
